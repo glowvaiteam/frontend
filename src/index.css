@@ -1,0 +1,206 @@
+@import url("https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap");
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* GLOWVAI Beauty Tech Theme - Yellow & Pale Yellow */
+    --background: 50 100% 98%;
+    --foreground: 0 0% 5%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 0 0% 5%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 0 0% 5%;
+
+    /* Primary - Golden Yellow */
+    --primary: 45 100% 50%;
+    --primary-foreground: 0 0% 5%;
+
+    /* Secondary - Pale Yellow */
+    --secondary: 50 80% 92%;
+    --secondary-foreground: 0 0% 15%;
+
+    /* Muted - Light Cream */
+    --muted: 48 60% 94%;
+    --muted-foreground: 0 0% 40%;
+
+    /* Accent - Warm Yellow */
+    --accent: 42 90% 85%;
+    --accent-foreground: 0 0% 10%;
+
+    --destructive: 0 72% 55%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 48 30% 88%;
+    --input: 48 30% 88%;
+    --ring: 45 100% 50%;
+
+    --radius: 1rem;
+
+    /* Gradients */
+    --gradient-hero: linear-gradient(135deg, hsl(50 100% 96%), hsl(45 90% 92%), hsl(48 80% 95%));
+    --gradient-primary: linear-gradient(135deg, hsl(45 100% 50%), hsl(38 100% 55%));
+    --gradient-glass: linear-gradient(135deg, hsl(0 0% 100% / 0.9), hsl(0 0% 100% / 0.5));
+    --gradient-card: linear-gradient(180deg, hsl(0 0% 100%), hsl(50 100% 98%));
+    --gradient-dark: linear-gradient(135deg, hsl(0 0% 5%), hsl(0 0% 10%));
+
+    /* Glow Effects */
+    --glow-primary: 0 0 40px hsl(45 100% 50% / 0.35);
+    --glow-accent: 0 0 30px hsl(42 90% 60% / 0.25);
+
+    /* Chart Colors */
+    --chart-1: 45 100% 50%;
+    --chart-2: 50 80% 60%;
+    --chart-3: 38 90% 55%;
+    --chart-4: 55 70% 65%;
+    --chart-5: 42 85% 50%;
+
+    /* Sidebar */
+    --sidebar-background: 0 0% 100%;
+    --sidebar-foreground: 0 0% 5%;
+    --sidebar-primary: 45 100% 50%;
+    --sidebar-primary-foreground: 0 0% 5%;
+    --sidebar-accent: 50 80% 92%;
+    --sidebar-accent-foreground: 0 0% 15%;
+    --sidebar-border: 48 30% 88%;
+    --sidebar-ring: 45 100% 50%;
+
+    /* Custom Yellow Theme Colors */
+    --rose: 45 100% 50%;
+    --rose-light: 50 80% 92%;
+    --lavender: 48 70% 75%;
+    --lavender-light: 50 60% 92%;
+    --teal: 42 90% 55%;
+    --teal-light: 48 80% 90%;
+    --nude: 45 40% 88%;
+    --blush: 50 70% 92%;
+
+    --font-sans: 'Plus Jakarta Sans', ui-sans-serif, system-ui, -apple-system, sans-serif;
+  }
+
+  .dark {
+    --background: 0 0% 5%;
+    --foreground: 50 100% 96%;
+
+    --card: 0 0% 8%;
+    --card-foreground: 50 100% 96%;
+
+    --popover: 0 0% 10%;
+    --popover-foreground: 50 100% 96%;
+
+    --primary: 45 100% 55%;
+    --primary-foreground: 0 0% 5%;
+
+    --secondary: 0 0% 15%;
+    --secondary-foreground: 50 80% 90%;
+
+    --muted: 0 0% 12%;
+    --muted-foreground: 50 30% 65%;
+
+    --accent: 42 80% 25%;
+    --accent-foreground: 45 90% 85%;
+
+    --destructive: 0 70% 50%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 0 0% 18%;
+    --input: 0 0% 18%;
+    --ring: 45 100% 55%;
+
+    --gradient-hero: linear-gradient(135deg, hsl(0 0% 5%), hsl(0 0% 8%), hsl(0 0% 6%));
+    --gradient-primary: linear-gradient(135deg, hsl(45 100% 55%), hsl(38 100% 50%));
+    --gradient-glass: linear-gradient(135deg, hsl(0 0% 15% / 0.8), hsl(0 0% 10% / 0.4));
+    --gradient-card: linear-gradient(180deg, hsl(0 0% 10%), hsl(0 0% 6%));
+
+    --glow-primary: 0 0 50px hsl(45 100% 55% / 0.4);
+    --glow-accent: 0 0 40px hsl(42 90% 50% / 0.3);
+
+    --chart-1: 45 100% 55%;
+    --chart-2: 50 80% 50%;
+    --chart-3: 38 90% 50%;
+    --chart-4: 55 70% 55%;
+    --chart-5: 42 85% 45%;
+
+    --sidebar-background: 0 0% 8%;
+    --sidebar-foreground: 50 100% 96%;
+    --sidebar-primary: 45 100% 55%;
+    --sidebar-primary-foreground: 0 0% 5%;
+    --sidebar-accent: 0 0% 15%;
+    --sidebar-accent-foreground: 50 80% 90%;
+    --sidebar-border: 0 0% 18%;
+    --sidebar-ring: 45 100% 55%;
+
+    --rose: 45 100% 55%;
+    --rose-light: 42 50% 20%;
+    --lavender: 48 60% 50%;
+    --lavender-light: 45 30% 18%;
+    --teal: 42 80% 45%;
+    --teal-light: 45 40% 18%;
+    --nude: 40 20% 25%;
+    --blush: 48 40% 20%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground font-sans antialiased;
+  }
+}
+
+@layer utilities {
+  .glass {
+    @apply bg-gradient-to-br from-white/80 to-white/40 backdrop-blur-xl border border-white/30;
+  }
+
+  .dark .glass {
+    @apply from-white/10 to-white/5 border-white/10;
+  }
+
+  .gradient-hero {
+    background: var(--gradient-hero);
+  }
+
+  .gradient-primary {
+    background: var(--gradient-primary);
+  }
+
+  .gradient-card {
+    background: var(--gradient-card);
+  }
+
+  .glow-primary {
+    box-shadow: var(--glow-primary);
+  }
+
+  .glow-accent {
+    box-shadow: var(--glow-accent);
+  }
+
+  .text-gradient {
+    @apply bg-clip-text text-transparent bg-gradient-to-r from-primary to-rose;
+  }
+}
+
+@layer components {
+  .btn-glow {
+    @apply relative overflow-hidden transition-all duration-300;
+  }
+
+  .btn-glow::before {
+    content: '';
+    @apply absolute inset-0 opacity-0 transition-opacity duration-300;
+    background: var(--gradient-primary);
+    filter: blur(20px);
+  }
+
+  .btn-glow:hover::before {
+    @apply opacity-50;
+  }
+}

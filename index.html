@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>GLOWVAI - AI-Powered Beauty & Skincare Analysis</title>
+    <meta name="description" content="Unlock your best skin with GLOWVAI. AI-powered face analysis, personalized beauty recommendations, and premium skincare insights." />
+    <meta name="author" content="GLOWVAI" />
+    <meta name="keywords" content="AI skincare, face analysis, beauty tech, personalized skincare, skin analysis, beauty recommendations" />
+    <link rel="canonical" href="https://glowvai.com" />
+
+    <meta property="og:title" content="GLOWVAI - AI-Powered Beauty & Skincare Analysis" />
+    <meta property="og:description" content="Unlock your best skin with AI. Personalized face analysis, beauty recommendations, and premium skincare insights." />
+    <meta property="og:type" content="website" />
+    <meta property="og:image" content="https://lovable.dev/opengraph-image-p98pqg.png" />
+
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="GLOWVAI - AI-Powered Beauty & Skincare" />
+    <meta name="twitter:description" content="Unlock your best skin with AI. Personalized face analysis and beauty recommendations." />
+    <meta name="twitter:image" content="https://lovable.dev/opengraph-image-p98pqg.png" />
+    <script>
+      (function () {
+        try {
+          var raw = localStorage.getItem('theme_pref');
+          var applied = false;
+          if (raw) {
+            try {
+              var obj = JSON.parse(raw);
+              var age = Date.now() - (obj.ts || 0);
+              var TWO_DAYS = 2 * 24 * 60 * 60 * 1000;
+              if (age >= 0 && age <= TWO_DAYS && (obj.value === 'dark' || obj.value === 'light')) {
+                if (obj.value === 'dark') document.documentElement.classList.add('dark');
+                else document.documentElement.classList.remove('dark');
+                applied = true;
+              }
+            } catch (e) {
+              // parse error, fallthrough
+            }
+          }
+          // If no valid stored pref, default to light (no dark class)
+          if (!applied) {
+            document.documentElement.classList.remove('dark');
+          }
+        } catch (e) {
+          /* ignore */
+        }
+      })();
+    </script>
+  </head>
+
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.jsx"></script>
+  </body>
+</html>
