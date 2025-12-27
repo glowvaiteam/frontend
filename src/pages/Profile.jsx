@@ -51,7 +51,7 @@ export default function Profile() {
   const fetchProfileData = async (uid) => {
     try {
       const token = await auth.currentUser?.getIdToken();
-      const response = await axios.get("http://127.0.0.1:8000/api/user/profile", {
+      const response = await axios.get("https://glowvai-backend-v85o.onrender.com/api/user/profile", {
         headers: { Authorization: `Bearer ${token}` },
       });
       setProfileData(response.data);
@@ -69,7 +69,7 @@ export default function Profile() {
     try {
       const token = await auth.currentUser?.getIdToken();
       console.log("Fetching analysis history with token:", token ? "present" : "missing");
-      const response = await axios.get("http://127.0.0.1:8000/api/ml/history", {
+      const response = await axios.get("https://glowvai-backend-v85o.onrender.com/api/ml/history", {
         headers: { Authorization: `Bearer ${token}` },
       });
       console.log("Analysis history response:", response.data);
@@ -125,7 +125,7 @@ export default function Profile() {
         formData.append("profile_image", imageFile);
       }
 
-      const response = await axios.post("http://127.0.0.1:8000/api/user/profile", formData, {
+      const response = await axios.post("https://glowvai-backend-v85o.onrender.com/api/user/profile", formData, {
         headers: {
           Authorization: `Bearer ${token}`,
           "Content-Type": "multipart/form-data",

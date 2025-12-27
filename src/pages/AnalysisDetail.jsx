@@ -35,7 +35,7 @@ export default function AnalysisDetail() {
   const fetchAnalysisDetail = async () => {
     try {
       const token = await auth.currentUser?.getIdToken();
-      const response = await axios.get(`http://127.0.0.1:8000/api/ml/analysis/${analysisId}`, {
+      const response = await axios.get(`https://glowvai-backend-v85o.onrender.com/api/ml/analysis/${analysisId}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       console.log("Analysis detail:", response.data);

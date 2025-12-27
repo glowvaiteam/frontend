@@ -58,7 +58,7 @@ export default function Signup() {
       const res = await createUserWithEmailAndPassword(auth, email, password);
       const user = res.user;
 
-      await axios.post("http://127.0.0.1:8000/api/auth/signup", {
+      await axios.post("https://glowvai-backend-v85o.onrender.com/api/auth/signup", {
         uid: user.uid,
         full_name: name,
         email: user.email,
@@ -102,7 +102,7 @@ export default function Signup() {
       const result = await signInWithPopup(auth, googleProvider);
       const user = result.user;
 
-      await axios.post("http://127.0.0.1:8000/api/auth/signup", {
+      await axios.post("https://glowvai-backend-v85o.onrender.com/api/auth/signup", {
         uid: user.uid,
         full_name: user.displayName || "User",
         email: user.email,

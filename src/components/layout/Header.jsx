@@ -35,7 +35,7 @@ export function Header({ isDark, toggleDark }) {
           // Fetch profile from backend
           try {
             const token = await u.getIdToken();
-            const response = await fetch("http://127.0.0.1:8000/api/user/profile", {
+            const response = await fetch("https://glowvai-backend-v85o.onrender.com/api/user/profile", {
               headers: { Authorization: `Bearer ${token}` },
             });
             if (response.ok) {

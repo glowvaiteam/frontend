@@ -29,7 +29,7 @@ export default function Login() {
 
       localStorage.setItem("token", token);
 
-      await axios.get("http://127.0.0.1:8000/api/auth/me", {
+      await axios.get("https://glowvai-backend-v85o.onrender.com/api/auth/me", {
         headers: { Authorization: `Bearer ${token}` },
       });
 
@@ -75,7 +75,7 @@ export default function Login() {
 
       localStorage.setItem("token", token);
 
-      await axios.get("http://127.0.0.1:8000/api/auth/me", {
+      await axios.get("https://glowvai-backend-v85o.onrender.com/api/auth/me", {
         headers: { Authorization: `Bearer ${token}` },
       });
 

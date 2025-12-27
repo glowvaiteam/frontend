@@ -54,7 +54,7 @@ export default function Index() {
     if (!u) return false;
     try {
       const token = await u.getIdToken();
-      const response = await axios.get("http://127.0.0.1:8000/api/user/profile", {
+      const response = await axios.get("https://glowvai-backend-v85o.onrender.com/api/user/profile", {
         headers: { Authorization: `Bearer ${token}` },
       });
       
