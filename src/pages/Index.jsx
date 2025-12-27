@@ -142,8 +142,8 @@ export default function Index() {
 
   return (
     <div className="flex flex-col">
-      {/* Profile Completion Modal */}
-      {showProfileModal && (
+      {/* Profile Completion Modal (only for logged-in users with incomplete profile) */}
+      {user && showProfileModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
           <div className="bg-white rounded-xl shadow-lg p-8 max-w-sm w-full text-center relative">
             <h3 className="text-xl font-bold mb-2 text-primary">Complete Your Profile</h3>
