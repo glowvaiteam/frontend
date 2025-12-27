@@ -130,6 +130,19 @@ const handleGoogleSignup = async () => {
 };
 
 
+  // Fix: Add handleKeyPress function
+  const handleKeyPress = (e) => {
+    if (e.key === "Enter") {
+      if (e.target.name === "name" && emailRef.current) {
+        emailRef.current.focus();
+      } else if (e.target.name === "email" && passwordRef.current) {
+        passwordRef.current.focus();
+      } else if (e.target.name === "password") {
+        handleSignup();
+      }
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-yellow-50 via-white to-yellow-100 flex items-center justify-center px-4 py-8 md:py-12">
       {/* Background decorative elements */}
