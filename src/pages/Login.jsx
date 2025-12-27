@@ -1,8 +1,9 @@
 import { useState, useRef } from "react";
 import useAuthRedirect from "@/hooks/useAuthRedirect";
 import { useNavigate } from "react-router-dom";
-import { auth, googleProvider } from "../firebase";
+import { auth, googleProvider, db } from "../firebase";
 import { signInWithEmailAndPassword, signInWithPopup } from "firebase/auth";
+import { doc, setDoc, getDoc } from "firebase/firestore";
 import axios from "axios";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -72,6 +73,19 @@ export default function Login() {
       await signInWithPopup(auth, googleProvider);
       const user = auth.currentUser;
       const token = await user.getIdToken();
+
+      // Save user to Firestore if not exists
+      if (user) {
+        const userRef = doc(db, "users", user.uid);
+        const userSnap = await getDoc(userRef);
+        if (!userSnap.exists()) {
+          await setDoc(userRef, {
+            uid: user.uid,
+            full_name: user.displayName || "User",
+            email: user.email,
+          });
+        }
+      }
 
       localStorage.setItem("token", token);
 
