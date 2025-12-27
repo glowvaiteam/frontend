@@ -1,19 +1,61 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
+import { auth } from "../firebase";
+import { onAuthStateChanged } from "firebase/auth";
 import { Camera, Upload, Scan, Sparkles, AlertCircle, CheckCircle2, ShoppingBag } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Progress } from "@/components/ui/progress";
 import { cn } from "@/lib/utils";
-
 
 export default function FaceAnalyzer() {
   const [image, setImage] = useState(null);
+  // Privacy settings (sync with localStorage)
+  const [dataProcessing, setDataProcessing] = useState(() => {
+    const val = localStorage.getItem("glowvai_data_processing");
+    return val === null ? false : val === "true";
+  });
+  const [saveAnalysisHistory, setSaveAnalysisHistory] = useState(() => {
+    const val = localStorage.getItem("glowvai_save_analysis_history");
+    return val === null ? false : val === "true";
+  });
+  const [privacyConsent, setPrivacyConsent] = useState(() => {
+    return localStorage.getItem("glowvai_privacy_consent") === "true";
+  });
+  const [showPermissionModal, setShowPermissionModal] = useState(false);
+  const [consentChecked, setConsentChecked] = useState(false);
+  // ...existing code...
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [result, setResult] = useState(null);
   const fileInputRef = useRef(null);
   const videoRef = useRef(null);
   const streamRef = useRef(null);
   const [cameraActive, setCameraActive] = useState(false);
+  const [showLoginModal, setShowLoginModal] = useState(false);
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  // prevent page scrolling and ensure overlay covers everything when modal open
+  useEffect(() => {
+    if (showLoginModal || showPermissionModal) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+    }
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [showLoginModal, showPermissionModal]);
+
+  // Keep state in sync with localStorage (for Settings page changes)
+  useEffect(() => {
+    const onStorage = () => {
+      setDataProcessing(localStorage.getItem("glowvai_data_processing") === "true");
+      setSaveAnalysisHistory(localStorage.getItem("glowvai_save_analysis_history") === "true");
+      setPrivacyConsent(localStorage.getItem("glowvai_privacy_consent") === "true");
+    };
+    window.addEventListener("storage", onStorage);
+    return () => window.removeEventListener("storage", onStorage);
+  }, []);
 
   const handleFileSelect = (e) => {
     const file = e.target.files?.[0];
@@ -28,6 +70,17 @@ export default function FaceAnalyzer() {
   };
 
   const handleCameraCapture = async () => {
+    // if user not logged in, show login prompt
+    try {
+      const user = auth.currentUser;
+      if (!user) {
+        setShowLoginModal(true);
+        return;
+      }
+    } catch (e) {
+      // ignore
+    }
+    // ...existing code...
     // Start in-page camera preview using getUserMedia and open modal
     try {
       if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
@@ -77,26 +130,71 @@ export default function FaceAnalyzer() {
     setImage(dataUrl);
     setResult(null);
     stopCamera();
-    // Photo is captured and set; user should press the main "Analyze Face" button
-    // to run analysis. This keeps behavior identical to the upload flow and
-    // ensures the one-time tip/confirm appears when the user initiates analysis.
+    // ...existing code...
   };
 
   // Send image data (data URL) to backend API; returns parsed JSON or throws
   const sendToBackend = async (dataUrl) => {
-    const endpoint = "/api/analyze";
-    try {
-      const res = await fetch(endpoint, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ image: dataUrl }),
-      });
-      if (!res.ok) throw new Error("backend error");
-      const json = await res.json();
-      return json;
-    } catch (err) {
-      throw err;
+    // Try authenticated first, then fall back to demo
+    const endpoints = [
+      { url: "http://127.0.0.1:8000/api/ml/analyze-face", requiresAuth: true, name: "Authenticated" },
+      { url: "http://127.0.0.1:8000/api/ml/analyze-face-demo", requiresAuth: false, name: "Demo" }
+    ];
+
+    for (const endpoint of endpoints) {
+      try {
+        console.log(`\n📤 Trying ${endpoint.name} endpoint: ${endpoint.url}`);
+
+        let headers = {};
+        
+        if (endpoint.requiresAuth) {
+          const token = await auth.currentUser?.getIdToken();
+          console.log(`Token status: ${token ? "✅ Present" : "❌ Missing"}`);
+          
+          if (!token) {
+            console.log("⏭️ Skipping authenticated endpoint - no token");
+            continue;
+          }
+          headers["Authorization"] = `Bearer ${token}`;
+        }
+
+        // Convert data URL to blob
+        const response = await fetch(dataUrl);
+        const blob = await response.blob();
+
+        // Create FormData and append image
+        const formData = new FormData();
+        formData.append("image", blob, "selfie.jpg");
+
+        console.log("📤 Sending request...");
+
+        // Send to backend
+        const res = await fetch(endpoint.url, {
+          method: "POST",
+          headers,
+          body: formData,
+        });
+
+        console.log(`📥 Response status: ${res.status}`);
+
+        if (!res.ok) {
+          const errorText = await res.text();
+          console.error(`❌ ${endpoint.name} failed (${res.status}):`, errorText);
+          continue; // Try next endpoint
+        }
+
+        const json = await res.json();
+        console.log(`✅ ${endpoint.name} SUCCESS!`, json);
+        return json;
+        
+      } catch (err) {
+        console.error(`⚠️ ${endpoint.name} error:`, err.message);
+        continue; // Try next endpoint
+      }
     }
+
+    // All endpoints failed
+    throw new Error("All endpoints failed - check console logs above");
   };
 
   const analyzeImage = async (img) => {
@@ -104,6 +202,16 @@ export default function FaceAnalyzer() {
     const isProgrammatic = typeof img === "string";
     const target = isProgrammatic ? img : image;
     if (!target) return;
+
+    // Privacy & permission check: block if not both ON
+    const currentDataProcessing = localStorage.getItem("glowvai_data_processing") === "true";
+    const currentSaveAnalysisHistory = localStorage.getItem("glowvai_save_analysis_history") === "true";
+    const currentConsent = localStorage.getItem("glowvai_privacy_consent") === "true";
+    if (!currentDataProcessing || !currentSaveAnalysisHistory || !currentConsent) {
+      setShowPermissionModal(true);
+      setConsentChecked(false);
+      return;
+    }
 
     if (!isProgrammatic) {
       try {
@@ -120,6 +228,17 @@ export default function FaceAnalyzer() {
       }
     }
 
+    // if not logged in, prompt to login before analyzing
+    try {
+      const user = auth.currentUser;
+      if (!user) {
+        setShowLoginModal(true);
+        return;
+      }
+    } catch (e) {
+      // ignore
+    }
+
     setIsAnalyzing(true);
 
     // Try backend first; fall back to local simulation if backend unavailable
@@ -127,27 +246,44 @@ export default function FaceAnalyzer() {
       const backendResult = await sendToBackend(target);
       setResult(backendResult);
     } catch (err) {
-      // fallback simulation
+      // fallback simulation - matches actual backend structure
       await new Promise((resolve) => setTimeout(resolve, 1400));
       setResult({
-        skinTone: { value: "Medium Warm", score: 85 },
-        acne: { level: "Mild", score: 25 },
-        darkCircles: { level: "Light", score: 35 },
-        wrinkles: { level: "Minimal", score: 15 },
-        texture: { quality: "Good", score: 75 },
-        hydration: { level: "Moderate", score: 60 },
-        suggestions: [
-          "Use a gentle vitamin C serum in the morning",
-          "Apply SPF 30+ sunscreen daily",
-          "Consider adding retinol to your nighttime routine",
-          "Stay hydrated - aim for 8 glasses of water daily",
-        ],
-        products: [
-          { name: "Hydrating Cleanser", type: "Cleanser" },
-          { name: "Vitamin C Serum", type: "Treatment" },
-          { name: "Moisturizing Cream", type: "Moisturizer" },
-          { name: "Mineral Sunscreen SPF 50", type: "Sunscreen" },
-        ],
+        image_url: "",
+        report: {
+          portrait_score: 45,
+          snapshot_overview: {
+            skin_tone: "Fair",
+            skin_type: "Normal",
+            acne_level: "Severe",
+            dark_spots: "Light",
+            texture_quality: "Uneven"
+          },
+          feature_analysis: {
+            eyes: "Average",
+            eyebrows: "Needs Improvement",
+            nose: "Average",
+            lips: "Average",
+            jawline: "Average",
+            cheekbones: "Needs Improvement"
+          },
+          skin_concerns: {
+            acne: "Severe",
+            dark_spots: "Light",
+            skin_clarity: "Uneven"
+          },
+          personalized_recommendations: [
+            "Use a gentle salicylic acid cleanser daily",
+            "Add niacinamide or vitamin C serum to your routine",
+            "Always apply SPF 30+ sunscreen during the day"
+          ],
+          recommended_products: [
+            "Salicylic Acid Cleanser",
+            "Vitamin C Serum",
+            "Broad Spectrum Sunscreen SPF 50"
+          ]
+        },
+        analysis_id: "fallback"
       });
     }
 
@@ -168,28 +304,15 @@ export default function FaceAnalyzer() {
   };
 
   const overallScore =
-    result
-      ? Math.round(
-          (result.skinTone.score +
-            (100 - result.acne.score) +
-            (100 - result.darkCircles.score) +
-            (100 - result.wrinkles.score) +
-            result.texture.score +
-            result.hydration.score) /
-            6
-        )
-      : null;
+    result?.report?.portrait_score || null;
 
   return (
     <main className="min-h-screen bg-background py-6 md:py-10">
       <div className="container max-w-4xl mx-auto px-4 md:px-6 space-y-6 md:space-y-8">
         {/* Intro Card */}
-        <Card className="border-0 shadow-xl bg-gradient-to-br from-rose via-lavender to-teal text-primary-foreground">
+        <Card className="border-0 shadow-xl gradient-primary text-primary-foreground">
           <CardContent className="pt-6 pb-6 md:pb-8">
             <div className="flex items-start gap-3">
-              <div className="mt-1 inline-flex h-9 w-9 items-center justify-center rounded-full bg-background/20 shadow-sm">
-                <Sparkles className="h-5 w-5" />
-              </div>
               <div>
                 <p className="text-[11px] font-semibold uppercase tracking-[0.16em] opacity-90">
                   Glowvai
@@ -204,6 +327,88 @@ export default function FaceAnalyzer() {
             </div>
           </CardContent>
         </Card>
+
+        {/* Privacy & Security Permissions Modal */}
+        {showPermissionModal && (
+          <div className="fixed inset-0 flex items-center justify-center bg-black/80 backdrop-blur-sm" style={{ zIndex: 2147483647 }}>
+            <div className="bg-card rounded-lg w-full max-w-md p-6 shadow-lg" style={{ zIndex: 2147483648 }}>
+              <h3 className="text-lg font-semibold mb-2">Privacy &amp; Security Permissions</h3>
+              <div className="mb-4 text-sm text-muted-foreground">
+                <p className="mb-2">To use the Face Analyzer, please review and accept the following permissions:</p>
+                <ul className="mb-2 list-disc pl-5">
+                  <li><b>Data Processing</b>: Your images will be processed securely for analysis. No images are stored unless you choose to save your analysis history.</li>
+                  <li><b>Save Analysis History</b>: Allows you to track your progress over time by saving your analysis results to your account.</li>
+                </ul>
+                <p className="mb-2"><b>Medical Disclaimer:</b> This tool provides informational insights only and is not a substitute for professional medical advice, diagnosis, or treatment.</p>
+              </div>
+              <div className="flex items-center mb-4">
+                <input
+                  id="privacy-consent-checkbox"
+                  type="checkbox"
+                  checked={consentChecked}
+                  onChange={e => setConsentChecked(e.target.checked)}
+                  className="mr-2"
+                />
+                <label htmlFor="privacy-consent-checkbox" className="text-sm">I have read and agree to the above permissions and disclaimer.</label>
+              </div>
+              <div className="flex gap-3 justify-end">
+                <Button
+                  variant="outline"
+                  onClick={() => setShowPermissionModal(false)}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  disabled={!consentChecked}
+                  onClick={() => {
+                    // Grant permissions, persist, and proceed
+                    setDataProcessing(true);
+                    setSaveAnalysisHistory(true);
+                    setPrivacyConsent(true);
+                    localStorage.setItem("glowvai_data_processing", "true");
+                    localStorage.setItem("glowvai_save_analysis_history", "true");
+                    localStorage.setItem("glowvai_privacy_consent", "true");
+                    setShowPermissionModal(false);
+                    setTimeout(() => analyzeImage(), 0); // proceed with analysis
+                  }}
+                >
+                  OK
+                </Button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Login Modal for unauthenticated access */}
+        {showLoginModal && (
+          <div
+            className="fixed inset-0 flex items-center justify-center bg-black/80 backdrop-blur-sm"
+            style={{ zIndex: 2147483647 }}
+            aria-hidden={false}
+          >
+            <div className="bg-card rounded-lg w-full max-w-md p-6 shadow-lg" style={{ zIndex: 2147483648 }}>
+              <h3 className="text-lg font-semibold">Please sign in</h3>
+              <p className="mt-2 text-sm text-muted-foreground">You need to be logged in to analyze images. Please sign in to continue.</p>
+              <div className="mt-4 flex gap-3 justify-end">
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    setShowLoginModal(false);
+                  }}
+                >
+                  Close
+                </Button>
+                <Button
+                  onClick={() => {
+                    navigate("/login", { state: { from: location.pathname } });
+                  }}
+                >
+                  Sign In
+                </Button>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Upload Card */}
         <Card className="shadow-md">
@@ -255,11 +460,11 @@ export default function FaceAnalyzer() {
             >
               {image ? (
                 <div className="flex items-start gap-4">
-                  <div className="relative h-28 w-28 overflow-hidden rounded-xl bg-muted shadow-sm">
+                    <div className="relative h-28 w-28 overflow-hidden rounded-xl bg-muted shadow-sm">
                     <img
                       src={image}
                       alt="Uploaded selfie"
-                      className="h-full w-full object-cover"
+                      className="h-full w-full object-cover object-top"
                     />
                   </div>
                   <div className="flex-1 space-y-2">
@@ -407,44 +612,23 @@ export default function FaceAnalyzer() {
                 <CardContent className="space-y-3 text-sm">
                   <div className="flex items-center justify-between">
                     <span className="text-muted-foreground">Skin tone</span>
-                    <span className="font-medium">{result.skinTone.value}</span>
+                    <span className="font-medium">{result.report?.snapshot_overview?.skin_tone}</span>
                   </div>
                   <div className="flex items-center justify-between">
                     <span className="text-muted-foreground">Acne level</span>
-                    <span className={cn("font-medium", getScoreColor(100 - result.acne.score))}>
-                      {result.acne.level}
-                    </span>
+                    <span className="font-medium">{result.report?.snapshot_overview?.acne_level}</span>
                   </div>
                   <div className="flex items-center justify-between">
-                    <span className="text-muted-foreground">Dark circles</span>
-                    <span
-                      className={cn(
-                        "font-medium",
-                        getScoreColor(100 - result.darkCircles.score)
-                      )}
-                    >
-                      {result.darkCircles.level}
-                    </span>
+                    <span className="text-muted-foreground">Dark spots</span>
+                    <span className="font-medium">{result.report?.snapshot_overview?.dark_spots}</span>
                   </div>
                   <div className="flex items-center justify-between">
-                    <span className="text-muted-foreground">Wrinkles &amp; fine lines</span>
-                    <span
-                      className={cn("font-medium", getScoreColor(100 - result.wrinkles.score))}
-                    >
-                      {result.wrinkles.level}
-                    </span>
+                    <span className="text-muted-foreground">Skin type</span>
+                    <span className="font-medium">{result.report?.snapshot_overview?.skin_type}</span>
                   </div>
                   <div className="flex items-center justify-between">
                     <span className="text-muted-foreground">Texture quality</span>
-                    <span className={cn("font-medium", getScoreColor(result.texture.score))}>
-                      {result.texture.quality}
-                    </span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-muted-foreground">Hydration</span>
-                    <span className={cn("font-medium", getScoreColor(result.hydration.score))}>
-                      {result.hydration.level}
-                    </span>
+                    <span className="font-medium">{result.report?.snapshot_overview?.texture_quality}</span>
                   </div>
                 </CardContent>
               </Card>
@@ -458,162 +642,14 @@ export default function FaceAnalyzer() {
                   Feature Analysis
                 </CardTitle>
               </CardHeader>
-              <CardContent className="space-y-6">
-                <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
-                  {/* Skin Tone */}
-                  <div className="space-y-2">
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm font-medium">Skin tone balance</span>
-                      <span
-                        className={cn(
-                          "rounded-full bg-muted px-2 py-0.5 text-xs font-medium",
-                          getScoreColor(result.skinTone.score)
-                        )}
-                      >
-                        {result.skinTone.score}/100
-                      </span>
+              <CardContent>
+                <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                  {Object.entries(result.report?.feature_analysis || {}).map(([key, value]) => (
+                    <div key={key} className="p-3 rounded-lg bg-secondary/50">
+                      <p className="text-xs text-muted-foreground capitalize mb-1">{key.replace('_', ' ')}</p>
+                      <p className="font-semibold">{value}</p>
                     </div>
-                    <Progress value={result.skinTone.score} className="h-2" />
-                    <p className="text-xs text-muted-foreground">
-                      Even, well-balanced skin tone with <span className="font-medium">medium warm</span>{" "}
-                      undertones.
-                    </p>
-                  </div>
-
-                  {/* Acne */}
-                  <div className="space-y-2">
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm font-medium">Blemishes &amp; acne</span>
-                      <span
-                        className={cn(
-                          "rounded-full bg-muted px-2 py-0.5 text-xs font-medium",
-                          getScoreColor(100 - result.acne.score)
-                        )}
-                      >
-                        {result.acne.level}
-                      </span>
-                    </div>
-                    <div className="h-2 overflow-hidden rounded-full bg-muted">
-                      <div
-                        className={cn(
-                          "h-full rounded-full transition-all",
-                          getProgressColor(result.acne.score, true)
-                        )}
-                        style={{ width: `${result.acne.score}%` }}
-                      />
-                    </div>
-                    <p className="text-xs text-muted-foreground">
-                      Mild localized breakouts; maintain gentle exfoliation and non-comedogenic products.
-                    </p>
-                  </div>
-
-                  {/* Dark circles */}
-                  <div className="space-y-2">
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm font-medium">Under-eye area</span>
-                      <span
-                        className={cn(
-                          "rounded-full bg-muted px-2 py-0.5 text-xs font-medium",
-                          getScoreColor(100 - result.darkCircles.score)
-                        )}
-                      >
-                        {result.darkCircles.level}
-                      </span>
-                    </div>
-                    <div className="h-2 overflow-hidden rounded-full bg-muted">
-                      <div
-                        className={cn(
-                          "h-full rounded-full transition-all",
-                          getProgressColor(result.darkCircles.score, true)
-                        )}
-                        style={{ width: `${result.darkCircles.score}%` }}
-                      />
-                    </div>
-                    <p className="text-xs text-muted-foreground">
-                      Slight darkening and puffiness; brightening eye cream and consistent sleep can help.
-                    </p>
-                  </div>
-
-                  {/* Wrinkles */}
-                  <div className="space-y-2">
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm font-medium">Lines &amp; wrinkles</span>
-                      <span
-                        className={cn(
-                          "rounded-full bg-muted px-2 py-0.5 text-xs font-medium",
-                          getScoreColor(100 - result.wrinkles.score)
-                        )}
-                      >
-                        {result.wrinkles.level}
-                      </span>
-                    </div>
-                    <div className="h-2 overflow-hidden rounded-full bg-muted">
-                      <div
-                        className={cn(
-                          "h-full rounded-full transition-all",
-                          getProgressColor(result.wrinkles.score, true)
-                        )}
-                        style={{ width: `${result.wrinkles.score}%` }}
-                      />
-                    </div>
-                    <p className="text-xs text-muted-foreground">
-                      Minimal visible fine lines; maintain sun protection and nightly repair products.
-                    </p>
-                  </div>
-
-                  {/* Texture */}
-                  <div className="space-y-2">
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm font-medium">Texture smoothness</span>
-                      <span
-                        className={cn(
-                          "rounded-full bg-muted px-2 py-0.5 text-xs font-medium",
-                          getScoreColor(result.texture.score)
-                        )}
-                      >
-                        {result.texture.score}/100
-                      </span>
-                    </div>
-                    <div className="h-2 overflow-hidden rounded-full bg-muted">
-                      <div
-                        className={cn(
-                          "h-full rounded-full transition-all",
-                          getProgressColor(result.texture.score)
-                        )}
-                        style={{ width: `${result.texture.score}%` }}
-                      />
-                    </div>
-                    <p className="text-xs text-muted-foreground">
-                      Overall smooth texture with a few uneven areas around T-zone.
-                    </p>
-                  </div>
-
-                  {/* Hydration */}
-                  <div className="space-y-2">
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm font-medium">Hydration level</span>
-                      <span
-                        className={cn(
-                          "rounded-full bg-muted px-2 py-0.5 text-xs font-medium",
-                          getScoreColor(result.hydration.score)
-                        )}
-                      >
-                        {result.hydration.level}
-                      </span>
-                    </div>
-                    <div className="h-2 overflow-hidden rounded-full bg-muted">
-                      <div
-                        className={cn(
-                          "h-full rounded-full transition-all",
-                          getProgressColor(result.hydration.score)
-                        )}
-                        style={{ width: `${result.hydration.score}%` }}
-                      />
-                    </div>
-                    <p className="text-xs text-muted-foreground">
-                      Balanced moisture levels; maintain lightweight hydrating layers and nightly barrier support.
-                    </p>
-                  </div>
+                  ))}
                 </div>
               </CardContent>
             </Card>
@@ -628,7 +664,7 @@ export default function FaceAnalyzer() {
               </CardHeader>
               <CardContent>
                 <ul className="space-y-3">
-                  {result.suggestions.map((suggestion, index) => (
+                  {(result.report?.personalized_recommendations || []).map((suggestion, index) => (
                     <li key={index} className="flex items-start gap-3">
                       <CheckCircle2 className="mt-0.5 h-5 w-5 text-teal flex-shrink-0" />
                       <span className="text-sm">{suggestion}</span>
@@ -648,7 +684,7 @@ export default function FaceAnalyzer() {
               </CardHeader>
               <CardContent>
                 <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
-                  {result.products.map((product, index) => (
+                  {(result.report?.recommended_products || []).map((product, index) => (
                     <div
                       key={index}
                       className="cursor-pointer rounded-xl bg-secondary/60 p-4 text-center shadow-[0_10px_25px_rgba(0,0,0,0.04)] transition-colors hover:bg-secondary"
@@ -656,8 +692,7 @@ export default function FaceAnalyzer() {
                       <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-primary/10">
                         <ShoppingBag className="h-5 w-5 text-primary" />
                       </div>
-                      <p className="text-sm font-medium">{product.name}</p>
-                      <p className="text-xs text-muted-foreground">{product.type}</p>
+                      <p className="text-sm font-medium">{product}</p>
                     </div>
                   ))}
                 </div>

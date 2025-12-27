@@ -65,7 +65,7 @@ export function Footer() {
             © {new Date().getFullYear()} GLOWVAI. All rights reserved.
           </p>
           <p className="text-sm text-muted-foreground flex items-center gap-1">
-            Made with <Heart className="h-4 w-4 text-primary fill-primary" /> for beautiful skin
+            Made with  for beautiful skin
           </p>
         </div>
       </div>

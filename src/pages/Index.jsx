@@ -1,10 +1,14 @@
-import { useState } from "react";
-import { Scan, Sparkles, ShoppingBag, Lightbulb, Shield } from "lucide-react";
+import { useState, useEffect } from "react";
+import { Scan, ShoppingBag, Lightbulb, Shield } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { FeatureCard } from "@/components/ui/feature-card";
 import { PreviewCard } from "@/components/ui/preview-card";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import heroBg from "@/assets/hero-bg.jpg";
+import { auth } from "@/firebase";
+import { onAuthStateChanged } from "firebase/auth";
+import { useToast } from "@/hooks/use-toast";
+import axios from "axios";
 
 const features = [
   {
@@ -14,7 +18,7 @@ const features = [
       "Advanced AI scans your face to detect skin tone, acne, spots, texture, and more with precision.",
   },
   {
-    icon: Sparkles,
+    icon: Lightbulb,
     title: "Personal Beauty Recommendations",
     description: "Get product suggestions tailored specifically for your unique skin type and concerns.",
   },
@@ -38,6 +42,95 @@ const features = [
 
 export default function Index() {
   const [cursorPosition, setCursorPosition] = useState({ x: 0, y: 0 });
+  const [user, setUser] = useState(null);
+  const [profileCompleted, setProfileCompleted] = useState(false);
+  const [showProfileModal, setShowProfileModal] = useState(false);
+  const [modalTimer, setModalTimer] = useState(null);
+  const { toast } = useToast();
+  const navigate = useNavigate();
+
+  // Check profile status
+  const checkProfileStatus = async (u) => {
+    if (!u) return false;
+    try {
+      const token = await u.getIdToken();
+      const response = await axios.get("http://127.0.0.1:8000/api/user/profile", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      
+      // Profile is complete only if ALL required fields are filled
+      const hasRequiredFields = response.data.age && response.data.gender && response.data.height && response.data.weight;
+      const isComplete = response.data.profile_completed && hasRequiredFields;
+      
+      console.log("Profile status:", {
+        profile_completed: response.data.profile_completed,
+        age: response.data.age,
+        gender: response.data.gender,
+        height: response.data.height,
+        weight: response.data.weight,
+        hasRequiredFields,
+        isComplete,
+      });
+      
+      setProfileCompleted(isComplete);
+      return isComplete;
+    } catch (error) {
+      console.error("Error checking profile:", error);
+      return false;
+    }
+  };
+
+  // Initial auth state check
+  useEffect(() => {
+    let unsub;
+    try {
+      unsub = onAuthStateChanged(auth, async (u) => {
+        setUser(u);
+        if (u) {
+          const isCompleted = await checkProfileStatus(u);
+          if (!isCompleted) {
+            setShowProfileModal(true);
+            // Start interval to show modal every 30s
+            if (!modalTimer) {
+              const timer = setInterval(async () => {
+                const stillIncomplete = !(await checkProfileStatus(u));
+                if (stillIncomplete) setShowProfileModal(true);
+              }, 30000);
+              setModalTimer(timer);
+            }
+          } else {
+            setShowProfileModal(false);
+            if (modalTimer) {
+              clearInterval(modalTimer);
+              setModalTimer(null);
+            }
+          }
+        } else {
+          setShowProfileModal(false);
+          if (modalTimer) {
+            clearInterval(modalTimer);
+            setModalTimer(null);
+          }
+        }
+      });
+    } catch (e) {
+      // ignore in non-auth environments
+    }
+    return () => {
+      if (unsub) unsub();
+      if (modalTimer) clearInterval(modalTimer);
+    };
+  }, [modalTimer]);
+
+  // ...existing code...
+  // Modal popup for incomplete profile
+  const handleCloseModal = () => {
+    setShowProfileModal(false);
+  };
+  const handleGoProfile = () => {
+    setShowProfileModal(false);
+    navigate("/profile");
+  };
 
   const handleHeroMouseMove = (event) => {
     const rect = event.currentTarget.getBoundingClientRect();
@@ -49,6 +142,20 @@ export default function Index() {
 
   return (
     <div className="flex flex-col">
+      {/* Profile Completion Modal */}
+      {showProfileModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+          <div className="bg-white rounded-xl shadow-lg p-8 max-w-sm w-full text-center relative">
+            <h3 className="text-xl font-bold mb-2 text-primary">Complete Your Profile</h3>
+            <p className="mb-4 text-muted-foreground">Fill in your details to unlock all features and get personalized recommendations.</p>
+            <div className="flex gap-4 justify-center mt-4">
+              <Button onClick={handleGoProfile} className="bg-primary text-white rounded-full px-6 py-2">Go</Button>
+              <Button variant="outline" onClick={handleCloseModal} className="rounded-full px-6 py-2">Close</Button>
+            </div>
+            <div className="absolute top-2 right-2 text-xs text-muted-foreground">This reminder will repeat every 30 seconds until completed.</div>
+          </div>
+        </div>
+      )}
       {/* Hero Section */}
       <section
         className="relative min-h-[85vh] flex items-center overflow-hidden"
@@ -80,30 +187,47 @@ export default function Index() {
         {/* Content */}
         <div className="container relative px-4 md:px-6 py-20 md:py-32">
           <div className="max-w-3xl mx-auto text-center">
-            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 border border-primary/20 text-sm font-medium text-primary mb-6">
-              <Sparkles className="h-4 w-4" />
-              AI-Powered Beauty Technology
-            </div>
-            <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold tracking-tight mb-6">
-              Unlock Your Best Skin{" "}
-              <span className="text-gradient">with AI</span>
-            </h1>
-            <p className="text-lg md:text-xl text-muted-foreground mb-8 max-w-2xl mx-auto">
-              Personalized face analysis, beauty product recommendations, and premium skincare insights — all
-              powered by cutting-edge AI.
-            </p>
-            <div className="flex flex-row gap-4 justify-center">
-              <Button
-                asChild
-                size="lg"
-                className="w-1/2 sm:w-auto rounded-full gradient-primary glow-primary text-primary-foreground border-0 px-4"
-              >
-                <Link to="/analyzer">Try Face Analyzer</Link>
-              </Button>
-              <Button asChild variant="outline" size="lg" className="w-1/2 sm:w-auto rounded-full px-4">
-                <Link to="/about">Learn More</Link>
-              </Button>
-            </div>
+            {!user && (
+              <div className="mb-8 px-4 text-center">
+                <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold tracking-tight mb-6">Welcome to GLOW{" "}<span className="text-gradient">VAI</span></h1>
+                <p className="text-lg md:text-xl text-muted-foreground mb-8 max-w-2xl mx-auto">Discover your perfect skincare routine with AI-powered insights.</p>
+                <div className="flex justify-center gap-4">
+                  <Button asChild size="lg" className="rounded-full bg-yellow-400 text-black shadow-md px-6 py-2 hover:bg-yellow-500">
+                    <Link to="/signup">Get Started - Sign Up</Link>
+                  </Button>
+                  <Button asChild size="lg" className="rounded-full bg-white/20 text-white border border-white/40 px-6 py-2 hover:bg-yellow-200 hover:text-black hover:border-yellow-300">
+                    <Link to="/login">Sign In</Link>
+                  </Button>
+                </div>
+              </div>
+            )}
+           
+            {user && (
+              <>
+                <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold tracking-tight mb-6">
+                  Unlock Your Best Skin{" "}
+                  <span className="text-gradient">with AI</span>
+                </h1>
+                <p className="text-lg md:text-xl text-muted-foreground mb-8 max-w-2xl mx-auto">
+                  Personalized face analysis, beauty product recommendations, and premium skincare insights — all
+                  powered by cutting-edge AI.
+                </p>
+              </>
+            )}
+            {user && (
+              <div className="flex flex-row gap-4 justify-center">
+                <Button
+                  asChild
+                  size="lg"
+                  className="w-1/2 sm:w-auto rounded-full gradient-primary glow-primary text-primary-foreground border-0 px-4"
+                >
+                  <Link to="/analyzer">Try Face Analyzer</Link>
+                </Button>
+                <Button asChild variant="outline" size="lg" className="w-1/2 sm:w-auto rounded-full px-4">
+                  <Link to="/about">Learn More</Link>
+                </Button>
+              </div>
+            )}
           </div>
         </div>
 
@@ -177,7 +301,7 @@ export default function Index() {
               badge="Coming Soon"
             />
             <PreviewCard
-              icon={Sparkles}
+              icon={Lightbulb}
               title="Beauty Insights"
               description="Access personalized tips and skincare routines"
               href="/profile"

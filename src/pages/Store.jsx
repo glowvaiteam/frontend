@@ -1,4 +1,4 @@
-import { ShoppingBag, Sparkles, Bell } from "lucide-react";
+import { ShoppingBag, Bell, BrainCircuit } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useState } from "react";
@@ -8,13 +8,34 @@ export default function Store() {
   const [email, setEmail] = useState("");
 
   const handleNotify = () => {
-    if (email) {
-      toast({
-        title: "You're on the list!",
-        description: "We'll notify you when the store launches.",
+    if (!email) {
+      toast("Email required", {
+        description: "Please enter your email to request early access.",
       });
-      setEmail("");
+      return;
     }
+
+    const subject = "Early Access Request – GLOWVAI Store";
+    const body = `Hello GLOWVAI Team,
+
+I would like to request early access to the GLOWVAI Store.
+
+My email: ${email}
+
+Please let me know the next steps.
+
+Thank you,`;
+
+    // ✅ Open mail app
+    window.location.href = `mailto:contact@glowvai.com?subject=${encodeURIComponent(
+      subject
+    )}&body=${encodeURIComponent(body)}`;
+
+    toast("Opening email app ✉️", {
+      description: "Please send the email to complete your request.",
+    });
+
+    setEmail("");
   };
 
   return (
@@ -28,9 +49,6 @@ export default function Store() {
           <div className="w-32 h-32 mx-auto rounded-3xl gradient-primary flex items-center justify-center glow-primary">
             <ShoppingBag className="h-16 w-16 text-primary-foreground" />
           </div>
-          <div className="absolute -top-2 -right-2 w-12 h-12 rounded-full bg-accent flex items-center justify-center animate-pulse">
-            <Sparkles className="h-6 w-6 text-accent-foreground" />
-          </div>
         </div>
 
         {/* Content */}
@@ -38,29 +56,15 @@ export default function Store() {
           Coming <span className="text-gradient">Soon</span>
         </h1>
         <p className="text-lg text-muted-foreground mb-8 max-w-md mx-auto">
-          Our curated beauty store is launching soon! Products recommended by the Face Analyzer will appear here.
+          Our curated beauty store is launching soon! Products recommended by the
+          Face Analyzer will appear here.
         </p>
 
         {/* Features Preview */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-12">
-          <div className="p-4 rounded-xl bg-card border border-border/50">
-            <div className="w-10 h-10 mx-auto mb-3 rounded-lg bg-secondary flex items-center justify-center">
-              <Sparkles className="h-5 w-5 text-primary" />
-            </div>
-            <p className="text-sm font-medium">AI Recommendations</p>
-          </div>
-          <div className="p-4 rounded-xl bg-card border border-border/50">
-            <div className="w-10 h-10 mx-auto mb-3 rounded-lg bg-secondary flex items-center justify-center">
-              <ShoppingBag className="h-5 w-5 text-primary" />
-            </div>
-            <p className="text-sm font-medium">Curated Products</p>
-          </div>
-          <div className="p-4 rounded-xl bg-card border border-border/50">
-            <div className="w-10 h-10 mx-auto mb-3 rounded-lg bg-secondary flex items-center justify-center">
-              <Bell className="h-5 w-5 text-primary" />
-            </div>
-            <p className="text-sm font-medium">Exclusive Deals</p>
-          </div>
+        <div className="grid grid-cols-3 gap-2 mb-8 sm:gap-4 sm:mb-12">
+          <Feature icon={<BrainCircuit />} label="AI Recommendations" />
+          <Feature icon={<ShoppingBag />} label="Curated Products" />
+          <Feature icon={<Bell />} label="Exclusive Deals" />
         </div>
 
         {/* Notify Form */}
@@ -76,10 +80,24 @@ export default function Store() {
             className="rounded-full h-12 px-8 gradient-primary text-primary-foreground"
             onClick={handleNotify}
           >
-            Notify Me
+            Request Access
           </Button>
         </div>
       </div>
+    </div>
+  );
+}
+
+/* Small helper */
+function Feature({ icon, label }) {
+  return (
+    <div className="p-2 sm:p-4 rounded-xl bg-card border border-border/50 flex flex-col items-center">
+      <div className="w-8 h-8 sm:w-10 sm:h-10 mb-2 sm:mb-3 rounded-lg bg-secondary flex items-center justify-center text-primary">
+        {icon}
+      </div>
+      <p className="text-[10px] sm:text-xs font-medium text-center leading-tight">
+        {label}
+      </p>
     </div>
   );
 }

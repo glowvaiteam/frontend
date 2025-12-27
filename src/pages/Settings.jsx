@@ -1,3 +1,4 @@
+import { useState, useEffect } from "react";
 import { Bell, Shield, Palette, Moon, Sun, ChevronRight } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
@@ -5,6 +6,46 @@ import { Separator } from "@/components/ui/separator";
 import { Link } from "react-router-dom";
 
 export default function Settings({ isDark, toggleDark }) {
+  // Privacy toggles synced with localStorage
+  const [dataProcessing, setDataProcessing] = useState(() => {
+    const val = localStorage.getItem("glowvai_data_processing");
+    return val === null ? false : val === "true";
+  });
+  const [saveAnalysisHistory, setSaveAnalysisHistory] = useState(() => {
+    const val = localStorage.getItem("glowvai_save_analysis_history");
+    return val === null ? false : val === "true";
+  });
+
+  // Keep state in sync with localStorage (for cross-tab and FaceAnalyzer changes)
+  useEffect(() => {
+    const onStorage = () => {
+      setDataProcessing(localStorage.getItem("glowvai_data_processing") === "true");
+      setSaveAnalysisHistory(localStorage.getItem("glowvai_save_analysis_history") === "true");
+    };
+    window.addEventListener("storage", onStorage);
+    return () => window.removeEventListener("storage", onStorage);
+  }, []);
+
+  // Handler for toggling Data Processing
+  const handleDataProcessing = (checked) => {
+    setDataProcessing(checked);
+    localStorage.setItem("glowvai_data_processing", checked ? "true" : "false");
+    // Invalidate consent if turned off
+    if (!checked) {
+      localStorage.setItem("glowvai_privacy_consent", "false");
+    }
+  };
+
+  // Handler for toggling Save Analysis History
+  const handleSaveAnalysisHistory = (checked) => {
+    setSaveAnalysisHistory(checked);
+    localStorage.setItem("glowvai_save_analysis_history", checked ? "true" : "false");
+    // Invalidate consent if turned off
+    if (!checked) {
+      localStorage.setItem("glowvai_privacy_consent", "false");
+    }
+  };
+
   return (
     <div className="min-h-screen py-8 md:py-16">
       <div className="container px-4 md:px-6 max-w-2xl mx-auto">
@@ -87,7 +128,7 @@ export default function Settings({ isDark, toggleDark }) {
                 <p className="font-medium">Data Processing</p>
                 <p className="text-sm text-muted-foreground">Process images on device when possible</p>
               </div>
-              <Switch defaultChecked />
+              <Switch checked={dataProcessing} onCheckedChange={handleDataProcessing} />
             </div>
             <Separator />
             <div className="flex items-center justify-between p-4 rounded-xl hover:bg-secondary/50 transition-colors">
@@ -95,7 +136,7 @@ export default function Settings({ isDark, toggleDark }) {
                 <p className="font-medium">Save Analysis History</p>
                 <p className="text-sm text-muted-foreground">Store past analyses for tracking</p>
               </div>
-              <Switch defaultChecked />
+              <Switch checked={saveAnalysisHistory} onCheckedChange={handleSaveAnalysisHistory} />
             </div>
             <Separator />
             <button className="w-full flex items-center justify-between p-4 rounded-xl hover:bg-secondary/50 transition-colors text-left">
