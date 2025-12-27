@@ -30,26 +30,36 @@ export function Header({ isDark, toggleDark }) {
     let unsub;
     try {
       unsub = onAuthStateChanged(auth, async (u) => {
-        setUser(u);
-        if (u) {
-          // Fetch profile from backend
-          try {
-            const token = await u.getIdToken();
-            const response = await fetch("https://glowvai-backend-v85o.onrender.com/api/user/profile", {
-              headers: { Authorization: `Bearer ${token}` },
-            });
-            if (response.ok) {
-              const data = await response.json();
-              setProfile(data);
-            } else {
-              setProfile(null);
-            }
-          } catch (err) {
-            setProfile(null);
-          }
-        } else {
-          setProfile(null);
-        }
+       setUser(u);
+
+if (u) {
+  // INSTANT UI (no wait)
+  setProfile({
+    full_name: u.displayName || "User",
+    profile_image: u.photoURL || null,
+  });
+
+  // THEN fetch backend profile in background
+  try {
+    const token = await u.getIdToken();
+    const response = await fetch(
+      "https://glowvai-backend-v85o.onrender.com/api/user/profile",
+      {
+        headers: { Authorization: `Bearer ${token}` },
+      }
+    );
+
+    if (response.ok) {
+      const data = await response.json();
+      setProfile(data); // overwrite with real data
+    }
+  } catch {
+    // keep fallback
+  }
+} else {
+  setProfile(null);
+}
+
       });
     } catch (e) {
       // ignore in non-auth environments

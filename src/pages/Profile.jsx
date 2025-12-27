@@ -36,17 +36,41 @@ export default function Profile() {
   const navigate = useNavigate();
   const location = useLocation();
 
-  useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (u) => {
-      if (u) {
-        setUser(u);
-        await fetchProfileData(u.uid);
-      } else {
-        navigate("/login");
-      }
-    });
-    return () => unsubscribe();
-  }, [navigate]);
+useEffect(() => {
+  const cached = localStorage.getItem("profile");
+  if (cached) {
+    setProfileData(JSON.parse(cached));
+    setIsLoading(false);
+  }
+}, []);
+
+
+
+useEffect(() => {
+  const unsubscribe = onAuthStateChanged(auth, async (u) => {
+    if (u) {
+      setUser(u);
+
+      // ⚡ INSTANT UI (no backend wait)
+      setProfileData((prev) => ({
+        ...prev,
+        full_name: u.displayName || "User",
+        email: u.email || "",
+        profile_image: u.photoURL || "",
+      }));
+
+      setIsLoading(false); // stop loader immediately
+
+      // 🔁 backend fetch in background
+      fetchProfileData(u.uid);
+    } else {
+      navigate("/login");
+    }
+  });
+
+  return () => unsubscribe();
+}, [navigate]);
+
 
   const fetchProfileData = async (uid) => {
     try {
@@ -54,7 +78,8 @@ export default function Profile() {
       const response = await axios.get("https://glowvai-backend-v85o.onrender.com/api/user/profile", {
         headers: { Authorization: `Bearer ${token}` },
       });
-      setProfileData(response.data);
+     setProfileData(response.data);
+     localStorage.setItem("profile", JSON.stringify(response.data))
       if (response.data.profile_image) {
         setImagePreview(response.data.profile_image);
       }
@@ -80,10 +105,13 @@ export default function Profile() {
   };
 
   useEffect(() => {
-    if (user) {
+  if (user) {
+    setTimeout(() => {
       fetchAnalysisHistory();
-    }
-  }, [user]);
+    }, 300);
+  }
+}, [user]);
+
 
   const handleImageChange = (e) => {
     const file = e.target.files?.[0];
