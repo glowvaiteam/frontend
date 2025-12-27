@@ -21,94 +21,101 @@ export default function Login() {
   const navigate = useNavigate();
   const passwordRef = useRef(null);
 
-  const handleLogin = async () => {
-    setError("");
-    setIsLoading(true);
-    try {
-      const res = await signInWithEmailAndPassword(auth, email, password);
-      const token = await res.user.getIdToken();
 
-      localStorage.setItem("token", token);
+const handleGoogleLogin = async () => {
+  setError("");
+  setIsLoading(true);
 
-      await axios.get("https://glowvai-backend-v85o.onrender.com/api/auth/me", {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+  try {
+    // 1️⃣ Google authentication
+    const res = await signInWithPopup(auth, googleProvider);
+    const user = res.user;
 
-      toast({
-        description: "Login successful! Redirecting...",
-      });
+    // 2️⃣ Get Firebase token
+    const token = await user.getIdToken();
+    localStorage.setItem("token", token);
 
-      setTimeout(() => {
-        navigate("/");
-      }, 500);
-    } catch (err) {
-      setIsLoading(false);
-      if (err.code === "auth/wrong-password") {
-        setError("Incorrect password. Please try again.");
-        toast({
-          description: "Incorrect password",
-          variant: "destructive",
-        });
-      } else if (err.code === "auth/user-not-found") {
-        setError("Email not registered. Please sign up first.");
-        toast({
-          description: "Email not registered",
-          variant: "destructive",
-        });
-      } else {
-        setError("Login failed. Please try again.");
-        toast({
-          description: "Login failed",
-          variant: "destructive",
-        });
-      }
-      setPassword("");
-    }
-  };
+    // 3️⃣ Firestore reference
+    const userRef = doc(db, "users", user.uid);
+    const userSnap = await getDoc(userRef);
 
-  const handleGoogleLogin = async () => {
-    setError("");
-    setIsLoading(true);
-    try {
-      await signInWithPopup(auth, googleProvider);
-      const user = auth.currentUser;
-      const token = await user.getIdToken();
-
-      // Save user to Firestore if not exists
-      if (user) {
-        const userRef = doc(db, "users", user.uid);
-        const userSnap = await getDoc(userRef);
-        if (!userSnap.exists()) {
-          await setDoc(userRef, {
-            uid: user.uid,
-            full_name: user.displayName || "User",
-            email: user.email,
-          });
-        }
-      }
-
-      localStorage.setItem("token", token);
-
-      await axios.get("https://glowvai-backend-v85o.onrender.com/api/auth/me", {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-
-      toast({
-        description: "Google login successful!",
-      });
-
-      setTimeout(() => {
-        navigate("/");
-      }, 500);
-    } catch (err) {
-      setIsLoading(false);
-      setError("Google login failed. Please try again.");
-      toast({
-        description: "Google login failed",
-        variant: "destructive",
+    // 4️⃣ Create user in Firestore if not exists
+    if (!userSnap.exists()) {
+      await setDoc(userRef, {
+        uid: user.uid,
+        email: user.email,
+        full_name: user.displayName || "User",
+        age: "",
+        gender: "",
+        height: "",
+        weight: "",
+        profile_completed: false,
+        created_at: new Date(),
+        updated_at: new Date(),
       });
     }
-  };
+
+    toast({
+      description: "Google login successful!",
+    });
+
+    // ✅ ALWAYS redirect to HOME
+    navigate("/");
+
+  } catch (error) {
+    console.error(error);
+    toast({
+      description: "Google login failed",
+      variant: "destructive",
+    });
+  } finally {
+    setIsLoading(false);
+  }
+};
+
+
+
+
+
+
+
+const handleLogin = async () => {
+  setError("");
+  setIsLoading(true);
+
+  try {
+    const res = await signInWithEmailAndPassword(auth, email, password);
+    const token = await res.user.getIdToken();
+
+    localStorage.setItem("token", token);
+
+    toast({
+      description: "Login successful!",
+    });
+
+    // ✅ Redirect to HOME
+    navigate("/");
+
+  } catch (err) {
+    setIsLoading(false);
+
+    if (err.code === "auth/wrong-password") {
+      setError("Incorrect password. Please try again.");
+      toast({ description: "Incorrect password", variant: "destructive" });
+    } else if (err.code === "auth/user-not-found") {
+      setError("Email not registered. Please sign up first.");
+      toast({ description: "Email not registered", variant: "destructive" });
+    } else {
+      setError("Login failed. Please try again.");
+      toast({ description: "Login failed", variant: "destructive" });
+    }
+
+    setPassword("");
+  }
+};
+
+
+  
 
   const handleKeyPress = (e) => {
     if (e.key === "Enter") {

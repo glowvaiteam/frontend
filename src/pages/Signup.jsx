@@ -23,133 +23,112 @@ export default function Signup() {
   const emailRef = useRef(null);
   const passwordRef = useRef(null);
 
-  const handleSignup = async () => {
-    setError("");
-    
-    // Validation
-    if (!name.trim()) {
-      setError("Please enter your full name.");
-      toast({
-        description: "Name is required",
-        variant: "destructive",
-      });
-      return;
-    }
-    
-    if (!email.includes("@")) {
-      setError("Please enter a valid email address.");
-      toast({
-        description: "Invalid email",
-        variant: "destructive",
-      });
-      return;
-    }
-    
-    if (password.length < 6) {
-      setError("Password must be at least 6 characters long.");
-      toast({
-        description: "Password too short",
-        variant: "destructive",
-      });
-      return;
-    }
+ const handleSignup = async () => {
+  setError("");
 
-    setIsLoading(true);
-    try {
-      const res = await createUserWithEmailAndPassword(auth, email, password);
-      const user = res.user;
+  // 🔹 Validation
+  if (!name.trim()) {
+    toast({ description: "Name is required", variant: "destructive" });
+    return;
+  }
 
-      await axios.post("https://glowvai-backend-v85o.onrender.com/api/auth/signup", {
+  if (!email.includes("@")) {
+    toast({ description: "Invalid email", variant: "destructive" });
+    return;
+  }
+
+  if (password.length < 6) {
+    toast({ description: "Password must be at least 6 characters", variant: "destructive" });
+    return;
+  }
+
+  setIsLoading(true);
+  try {
+    // 1️⃣ Create Firebase Auth user
+    const res = await createUserWithEmailAndPassword(auth, email, password);
+    const user = res.user;
+
+    // 2️⃣ Save user to Firestore
+    await setDoc(doc(db, "users", user.uid), {
+      uid: user.uid,
+      email: user.email,
+      full_name: name,
+      age: "",
+      gender: "",
+      height: "",
+      weight: "",
+      profile_completed: false,
+      created_at: new Date(),
+      updated_at: new Date(),
+    });
+
+    toast({
+      description: "Account created successfully!",
+    });
+
+    // 3️⃣ Redirect to profile completion
+    navigate("/profile");
+
+  } catch (err) {
+    console.error(err);
+    if (err.code === "auth/email-already-in-use") {
+      toast({ description: "Email already in use", variant: "destructive" });
+    } else {
+      toast({ description: "Signup failed", variant: "destructive" });
+    }
+  } finally {
+    setIsLoading(false);
+  }
+};
+
+
+const handleGoogleSignup = async () => {
+  setError("");
+  setIsLoading(true);
+
+  try {
+    // 1️⃣ Google authentication
+    const res = await signInWithPopup(auth, googleProvider);
+    const user = res.user;
+
+    // 2️⃣ Firestore reference
+    const userRef = doc(db, "users", user.uid);
+    const userSnap = await getDoc(userRef);
+
+    // 3️⃣ Create Firestore document if new user
+    if (!userSnap.exists()) {
+      await setDoc(userRef, {
         uid: user.uid,
-        full_name: name,
         email: user.email,
-      });
-
-      toast({
-        description: "Account created successfully! Redirecting...",
-      });
-
-      setTimeout(() => {
-        navigate("/");
-      }, 500);
-    } catch (err) {
-      setIsLoading(false);
-      if (err.code === "auth/email-already-in-use") {
-        setError("Email already registered. Please log in instead.");
-        toast({
-          description: "Email already in use",
-          variant: "destructive",
-        });
-      } else if (err.code === "auth/weak-password") {
-        setError("Password is too weak. Please use a stronger password.");
-        toast({
-          description: "Weak password",
-          variant: "destructive",
-        });
-      } else {
-        setError("Sign up failed. Please try again.");
-        toast({
-          description: "Sign up failed",
-          variant: "destructive",
-        });
-      }
-    }
-  };
-
-  const handleGoogleSignup = async () => {
-    setError("");
-    setIsLoading(true);
-    try {
-      const result = await signInWithPopup(auth, googleProvider);
-      const user = result.user;
-
-      // Save user to Firestore if not exists
-      if (user) {
-        const userRef = doc(db, "users", user.uid);
-        const userSnap = await getDoc(userRef);
-        if (!userSnap.exists()) {
-          await setDoc(userRef, {
-            uid: user.uid,
-            full_name: user.displayName || "User",
-            email: user.email,
-          });
-        }
-      }
-
-      await axios.post("https://glowvai-backend-v85o.onrender.com/api/auth/signup", {
-        uid: user.uid,
         full_name: user.displayName || "User",
-        email: user.email,
-      });
-
-      toast({
-        description: "Google sign up successful!",
-      });
-
-      setTimeout(() => {
-        navigate("/");
-      }, 500);
-    } catch (err) {
-      setIsLoading(false);
-      setError("Google sign up failed. Please try again.");
-      toast({
-        description: "Google sign up failed",
-        variant: "destructive",
+        age: "",
+        gender: "",
+        height: "",
+        weight: "",
+        profile_completed: false,
+        created_at: new Date(),
+        updated_at: new Date(),
       });
     }
-  };
 
-  const handleKeyPress = (e) => {
-    if (e.key === "Enter") {
-      if (e.target.name === "name" && emailRef.current) {
-        emailRef.current.focus();
-      } else if (e.target.name === "email" && passwordRef.current) {
-        passwordRef.current.focus();
-      } else if (e.target.name === "password") {
-        handleSignup();
-      }
-    }
-  };
+    toast({
+      description: "Google signup successful!",
+    });
+
+    // 4️⃣ Redirect to profile completion
+    navigate("/profile");
+
+  } catch (err) {
+    console.error(err);
+    toast({
+      description: "Google signup failed",
+      variant: "destructive",
+    });
+  } finally {
+    setIsLoading(false);
+  }
+};
+
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-yellow-50 via-white to-yellow-100 flex items-center justify-center px-4 py-8 md:py-12">
