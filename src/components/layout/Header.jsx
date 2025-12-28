@@ -13,6 +13,8 @@ import { Switch } from "@/components/ui/switch";
 import { cn } from "@/lib/utils";
 import { auth } from "@/firebase";
 import { onAuthStateChanged } from "firebase/auth";
+import GlowvaiLogo from "@/assets/Glowvai.svg"; // <-- Add this import
+import GlowvaiTransLogo from "@/assets/glowvaitrans.svg";
 
 const navItems = [
   { label: "Home", href: "/" },
@@ -74,12 +76,12 @@ if (u) {
       <div className="container flex h-16 items-center justify-between px-4 md:px-6">
         {/* Logo */}
         <Link to="/" className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-full gradient-primary flex items-center justify-center">
-            <span className="text-primary-foreground font-bold text-sm">G</span>
-          </div>
-          <span className="font-bold text-xl tracking-tight">
-            GLOW<span className="text-gradient">VAI</span>
-          </span>
+          <img
+            src={GlowvaiTransLogo}
+            alt="Glowvai Logo"
+            className="h-20 md:h-28 w-auto"
+            draggable={false}
+          />
         </Link>
 
         <nav className="hidden md:flex items-center gap-1">

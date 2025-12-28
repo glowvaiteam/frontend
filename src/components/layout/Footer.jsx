@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
 import { Heart } from "lucide-react";
+import GlowvaiTransLogo from "@/assets/glowvaitrans.svg";
 
 export function Footer() {
   return (
@@ -9,10 +10,12 @@ export function Footer() {
           {/* Brand */}
           <div className="md:col-span-2">
             <Link to="/" className="flex items-center gap-2 mb-4">
-              <div className="w-8 h-8 rounded-full gradient-primary flex items-center justify-center">
-                <span className="text-primary-foreground font-bold text-sm">G</span>
-              </div>
-              <span className="font-bold text-xl">GLOWVAI</span>
+              <img
+                src={GlowvaiTransLogo}
+                alt="Glowvai Logo"
+                className="h-16 md:h-24 w-auto"
+                draggable={false}
+              />
             </Link>
             <p className="text-sm text-muted-foreground max-w-xs">
               AI-powered beauty technology for personalized skincare insights and recommendations.
