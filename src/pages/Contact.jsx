@@ -75,8 +75,8 @@ export default function Contact() {
               <SocialCard
                 icon={<X />}
                 title="X"
-                subtitle="@glowvai"
-                href="https://x.com/glowvai"
+                subtitle="@Glowvai"
+                href="https://x.com/Glowvai"
                 external
               />
 
@@ -84,7 +84,7 @@ export default function Contact() {
                 icon={<Instagram />}
                 title="Instagram"
                 subtitle="@glowvai"
-                href="https://www.instagram.com/glowvai"
+                href="https://www.instagram.com/glowvai?igsh=MTV6Znk1ZHd2OGd5eg=="
                 external
               />
 
@@ -92,15 +92,23 @@ export default function Contact() {
                 icon={<Facebook />}
                 title="Facebook"
                 subtitle="/glowvai"
-                href="https://www.facebook.com/glowvai"
+                href="https://www.facebook.com/share/1AT8qi4mEC/"
                 external
               />
 
               <SocialCard
                 icon={<Mail />}
                 title="Email"
-                subtitle="contact@glowvai.com"
-                href="mailto:contact@glowvai.com"
+                subtitle={
+                  <>
+                    glowvai.team@gmail.com
+                    <br />
+                    +91 8977855998
+                    <br />
+                    Vijayawada
+                  </>
+                }
+                href="mailto:glowvai.team@gmail.com"
               />
 
             </div>
@@ -118,6 +126,7 @@ function SocialCard({ icon, title, subtitle, href, external }) {
       href={href}
       target={external ? "_blank" : undefined}
       rel={external ? "noopener noreferrer" : undefined}
+      title={title === "Email" ? "Send us an email" : undefined}
       className="flex items-center gap-4 p-5 rounded-2xl bg-[#FFF7E6]
                  hover:bg-[#FFEEC6] transition-all hover:-translate-y-1
                  shadow-sm"
