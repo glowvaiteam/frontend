@@ -205,8 +205,8 @@ export default function Index() {
             {user && (
               <>
                 <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold tracking-tight mb-6">
-                  Unlock Your Best Skin{" "}
-                  <span className="text-gradient">with AI</span>
+                  Unlock Your Best Skin with{" "}
+                  <span className="text-gradient">GLOWVAI</span>
                 </h1>
                 <p className="text-lg md:text-xl text-muted-foreground mb-8 max-w-2xl mx-auto">
                   Personalized face analysis, beauty product recommendations, and premium skincare insights — all
