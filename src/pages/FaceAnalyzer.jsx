@@ -542,7 +542,6 @@ export default function FaceAnalyzer() {
                 ref={fileInputRef}
                 type="file"
                 accept="image/*"
-                  capture="user"
                 className="hidden"
                 onChange={handleFileSelect}
               />
