@@ -23,10 +23,10 @@ export default function FaceAnalyzer() {
   });
   const [showPermissionModal, setShowPermissionModal] = useState(false);
   const [consentChecked, setConsentChecked] = useState(false);
-  // ...existing code...
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [result, setResult] = useState(null);
-  const fileInputRef = useRef(null);
+  const galleryInputRef = useRef(null);
+  const cameraInputRef = useRef(null);
   const videoRef = useRef(null);
   const streamRef = useRef(null);
   const [cameraActive, setCameraActive] = useState(false);
@@ -57,6 +57,7 @@ export default function FaceAnalyzer() {
     return () => window.removeEventListener("storage", onStorage);
   }, []);
 
+  // Handle file select for both gallery and camera inputs
   const handleFileSelect = (e) => {
     const file = e.target.files?.[0];
     if (file) {
@@ -80,11 +81,10 @@ export default function FaceAnalyzer() {
     } catch (e) {
       // ignore
     }
-    // ...existing code...
     // Start in-page camera preview using getUserMedia and open modal
     try {
       if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-        fileInputRef.current?.click();
+        cameraInputRef.current?.click();
         return;
       }
       const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" } });
@@ -98,7 +98,7 @@ export default function FaceAnalyzer() {
       }, 50);
     } catch (err) {
       console.error("Camera access failed:", err);
-      fileInputRef.current?.click();
+      cameraInputRef.current?.click();
     }
   };
 
@@ -130,7 +130,6 @@ export default function FaceAnalyzer() {
     setImage(dataUrl);
     setResult(null);
     stopCamera();
-    // ...existing code...
   };
 
   // Send image data (data URL) to backend API; returns parsed JSON or throws
@@ -432,7 +431,7 @@ export default function FaceAnalyzer() {
               <div className="inline-flex rounded-full bg-muted px-1 py-1 text-[11px]">
                 <button
                   type="button"
-                  onClick={handleCameraCapture}
+                  onClick={() => cameraInputRef.current?.click()}
                   className="inline-flex items-center gap-1 rounded-full bg-background px-3 py-1 text-xs font-medium text-foreground shadow-sm"
                 >
                   <Camera className="h-3 w-3" />
@@ -440,7 +439,7 @@ export default function FaceAnalyzer() {
                 </button>
                 <button
                   type="button"
-                  onClick={() => fileInputRef.current?.click()}
+                  onClick={() => galleryInputRef.current?.click()}
                   className="inline-flex items-center gap-1 rounded-full px-3 py-1 text-xs font-medium text-muted-foreground hover:text-foreground"
                 >
                   <Upload className="h-3 w-3" />
@@ -477,7 +476,7 @@ export default function FaceAnalyzer() {
                         variant="outline"
                         size="sm"
                         className="rounded-full"
-                        onClick={() => fileInputRef.current?.click()}
+                        onClick={() => galleryInputRef.current?.click()}
                       >
                         Change photo
                       </Button>
@@ -506,7 +505,7 @@ export default function FaceAnalyzer() {
                       Upload a clear, front-facing selfie for the most accurate analysis.
                     </p>
                   </div>
-                  <Button className="rounded-full px-6" onClick={() => fileInputRef.current?.click()}>
+                  <Button className="rounded-full px-6" onClick={() => galleryInputRef.current?.click()}>
                     Upload from device
                   </Button>
                   <p className="text-xs text-muted-foreground mt-2">Or open your camera to take a photo</p>
@@ -538,10 +537,19 @@ export default function FaceAnalyzer() {
                 </div>
               )}
 
+              {/* Hidden file inputs */}
               <input
-                ref={fileInputRef}
+                ref={galleryInputRef}
+                type="file"
+                accept="image/png, image/jpeg"
+                className="hidden"
+                onChange={handleFileSelect}
+              />
+              <input
+                ref={cameraInputRef}
                 type="file"
                 accept="image/*"
+                capture="user"
                 className="hidden"
                 onChange={handleFileSelect}
               />
