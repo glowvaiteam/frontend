@@ -116,7 +116,7 @@ const handleGoogleSignup = async () => {
     });
 
     // 4️⃣ Redirect to profile completion
-    navigate("/profile");
+    navigate("/");
 
   } catch (err) {
     console.error(err);
