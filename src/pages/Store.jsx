@@ -27,7 +27,7 @@ Please let me know the next steps.
 Thank you,`;
 
     // ✅ Open mail app
-    window.location.href = `mailto:contact@glowvai.com?subject=${encodeURIComponent(
+    window.location.href = `mailto:glowvai.team@gmail.com?subject=${encodeURIComponent(
       subject
     )}&body=${encodeURIComponent(body)}`;
 
