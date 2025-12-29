@@ -13,7 +13,6 @@ import { Switch } from "@/components/ui/switch";
 import { cn } from "@/lib/utils";
 import { auth } from "@/firebase";
 import { onAuthStateChanged } from "firebase/auth";
-import GlowvaiLogo from "@/assets/Glowvai.svg"; // <-- Add this import
 import GlowvaiTransLogo from "@/assets/glowvaitrans.svg";
 
 const navItems = [
