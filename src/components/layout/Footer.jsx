@@ -1,7 +1,7 @@
 import { Link } from "react-router-dom";
 import { Heart } from "lucide-react";
 import GlowvaiTransLogo from "@/assets/glowvaitrans.svg";
-import WWILogo from "@/assets/wwi.svg";
+import WWILogo from "@/assets/wwi2.png";
 
 export function Footer() {
   return (
@@ -68,14 +68,41 @@ export function Footer() {
           <p className="text-sm text-muted-foreground">
             © {new Date().getFullYear()} GLOWVAI. All rights reserved.
           </p>
-          <a href="https://wwi.org.in/" target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 group" style={{ textDecoration: 'none' }}>
-            <img src={WWILogo} alt="WWI Logo" className="h-12 md:h-16 w-auto" draggable={false} />
-            <div className="flex flex-col">
-              <span className="text-xs text-muted-foreground group-hover:text-foreground">Made with WWI</span>
-              <span className="text-sm font-bold text-foreground">WORK WIZARDS</span>
-              <span className="text-xs text-muted-foreground">INNOVATIONS</span>
-            </div>
-          </a>
+         <a
+
+  href="https://wwi.org.in/"
+  target="_blank"
+  rel="noopener noreferrer"
+  className="group"
+  style={{ textDecoration: "none" }}
+>
+  <div className="flex items-center gap-4">
+    {/* WWI Icon */}
+    <img
+      src={WWILogo}
+      alt="WWI Logo"
+      className="h-12 md:h-23 w-auto object-contain"
+      style={{ marginRight: "0px", marginTop: "2px" }}
+      draggable={false}
+    />
+
+    {/* Text */}
+    <div className="flex flex-col justify-center leading-[1.1]">
+      <span className="text-xs text-muted-foreground group-hover:text-foreground transition-colors">
+        Made with WWI
+      </span>
+
+      <span className="text-sm font-extrabold tracking-wide text-foreground">
+        WORK WIZARDS
+      </span>
+
+      <span className="text-[11px] tracking-widest text-muted-foreground">
+        INNOVATIONS
+      </span>
+    </div>
+  </div>
+</a>
+
 
         </div>
       </div>
