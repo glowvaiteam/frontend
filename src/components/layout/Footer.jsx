@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
 import { Heart } from "lucide-react";
 import GlowvaiTransLogo from "@/assets/glowvaitrans.svg";
+import WWILogo from "@/assets/wwi.svg";
 
 export function Footer() {
   return (
@@ -67,9 +68,15 @@ export function Footer() {
           <p className="text-sm text-muted-foreground">
             © {new Date().getFullYear()} GLOWVAI. All rights reserved.
           </p>
-          <p className="text-sm text-muted-foreground flex items-center gap-1">
-            Made with  for beautiful skin
-          </p>
+          <a href="https://wwi.org.in/" target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 group" style={{ textDecoration: 'none' }}>
+            <img src={WWILogo} alt="WWI Logo" className="h-12 md:h-16 w-auto" draggable={false} />
+            <div className="flex flex-col">
+              <span className="text-xs text-muted-foreground group-hover:text-foreground">Made with WWI</span>
+              <span className="text-sm font-bold text-foreground">WORK WIZARDS</span>
+              <span className="text-xs text-muted-foreground">INNOVATIONS</span>
+            </div>
+          </a>
+
         </div>
       </div>
     </footer>
