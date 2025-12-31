@@ -8,7 +8,7 @@ import axios from "axios";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
-import { User, Mail, Lock } from "lucide-react";
+import { User, Mail, Lock, Eye, EyeOff } from "lucide-react";
 import GoogleSVG from "../assets/google.svg";
 
 export default function Signup() {
@@ -18,89 +18,45 @@ export default function Signup() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   const { toast } = useToast();
   const navigate = useNavigate();
   const emailRef = useRef(null);
   const passwordRef = useRef(null);
 
- const handleSignup = async () => {
-  setError("");
+  const handleSignup = async () => {
+    setError("");
 
-  // 🔹 Validation
-  if (!name.trim()) {
-    toast({ description: "Name is required", variant: "destructive" });
-    return;
-  }
-
-  if (!email.includes("@")) {
-    toast({ description: "Invalid email", variant: "destructive" });
-    return;
-  }
-
-  if (password.length < 6) {
-    toast({ description: "Password must be at least 6 characters", variant: "destructive" });
-    return;
-  }
-
-  setIsLoading(true);
-  try {
-    // 1️⃣ Create Firebase Auth user
-    const res = await createUserWithEmailAndPassword(auth, email, password);
-    const user = res.user;
-
-    // 2️⃣ Save user to Firestore
-    await setDoc(doc(db, "users", user.uid), {
-      uid: user.uid,
-      email: user.email,
-      full_name: name,
-      age: "",
-      gender: "",
-      height: "",
-      weight: "",
-      profile_completed: false,
-      created_at: new Date(),
-      updated_at: new Date(),
-    });
-
-    toast({
-      description: "Account created successfully!",
-    });
-
-    // 3️⃣ Redirect to profile completion
-    navigate("/profile");
-
-  } catch (err) {
-    console.error(err);
-    if (err.code === "auth/email-already-in-use") {
-      toast({ description: "Email already in use", variant: "destructive" });
-    } else {
-      toast({ description: "Signup failed", variant: "destructive" });
+    // 🔹 Validation
+    if (!name.trim()) {
+      toast({ description: "Name is required", variant: "destructive" });
+      return;
     }
-  } finally {
-    setIsLoading(false);
-  }
-};
 
+    if (!email.includes("@")) {
+      toast({ description: "Invalid email", variant: "destructive" });
+      return;
+    }
 
-const handleGoogleSignup = async () => {
-  setError("");
-  setIsLoading(true);
+    if (password.length < 6) {
+      toast({
+        description: "Password must be at least 6 characters",
+        variant: "destructive",
+      });
+      return;
+    }
 
-  try {
-    // 1️⃣ Google authentication
-    const res = await signInWithPopup(auth, googleProvider);
-    const user = res.user;
+    setIsLoading(true);
+    try {
+      // 1️⃣ Create Firebase Auth user
+      const res = await createUserWithEmailAndPassword(auth, email, password);
+      const user = res.user;
 
-    // 2️⃣ Firestore reference
-    const userRef = doc(db, "users", user.uid);
-    const userSnap = await getDoc(userRef);
-
-    // 3️⃣ Create Firestore document if new user
-    if (!userSnap.exists()) {
-      await setDoc(userRef, {
+      // 2️⃣ Save user to Firestore
+      await setDoc(doc(db, "users", user.uid), {
         uid: user.uid,
         email: user.email,
-        full_name: user.displayName || "User",
+        full_name: name,
         age: "",
         gender: "",
         height: "",
@@ -109,26 +65,70 @@ const handleGoogleSignup = async () => {
         created_at: new Date(),
         updated_at: new Date(),
       });
+
+      toast({
+        description: "Account created successfully!",
+      });
+
+      // 3️⃣ Redirect to profile completion
+      navigate("/profile");
+    } catch (err) {
+      console.error(err);
+      if (err.code === "auth/email-already-in-use") {
+        toast({ description: "Email already in use", variant: "destructive" });
+      } else {
+        toast({ description: "Signup failed", variant: "destructive" });
+      }
+    } finally {
+      setIsLoading(false);
     }
+  };
 
-    toast({
-      description: "Google signup successful!",
-    });
+  const handleGoogleSignup = async () => {
+    setError("");
+    setIsLoading(true);
 
-    // 4️⃣ Redirect to profile completion
-    navigate("/");
+    try {
+      // 1️⃣ Google authentication
+      const res = await signInWithPopup(auth, googleProvider);
+      const user = res.user;
 
-  } catch (err) {
-    console.error(err);
-    toast({
-      description: "Google signup failed",
-      variant: "destructive",
-    });
-  } finally {
-    setIsLoading(false);
-  }
-};
+      // 2️⃣ Firestore reference
+      const userRef = doc(db, "users", user.uid);
+      const userSnap = await getDoc(userRef);
 
+      // 3️⃣ Create Firestore document if new user
+      if (!userSnap.exists()) {
+        await setDoc(userRef, {
+          uid: user.uid,
+          email: user.email,
+          full_name: user.displayName || "User",
+          age: "",
+          gender: "",
+          height: "",
+          weight: "",
+          profile_completed: false,
+          created_at: new Date(),
+          updated_at: new Date(),
+        });
+      }
+
+      toast({
+        description: "Google signup successful!",
+      });
+
+      // 4️⃣ Redirect to profile completion
+      navigate("/");
+    } catch (err) {
+      console.error(err);
+      toast({
+        description: "Google signup failed",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   // Fix: Add handleKeyPress function
   const handleKeyPress = (e) => {
@@ -153,12 +153,14 @@ const handleGoogleSignup = async () => {
 
       <div className="w-full max-w-md relative z-10">
         {/* Mobile illustration */}
-       
+
         <div className="text-center mb-8 md:mb-12">
           <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold tracking-tight mb-3">
             Join <span className="text-gradient">GLOWVAI</span>
           </h1>
-          <p className="text-base md:text-lg text-muted-foreground">Create your account for personalized beauty analysis</p>
+          <p className="text-base md:text-lg text-muted-foreground">
+            Create your account for personalized beauty analysis
+          </p>
         </div>
 
         <div className="bg-white/80 backdrop-blur-sm rounded-3xl shadow-xl p-6 md:p-8 border border-white/40">
@@ -177,13 +179,17 @@ const handleGoogleSignup = async () => {
               <div className="w-full border-t border-gray-200"></div>
             </div>
             <div className="relative flex justify-center text-xs uppercase">
-              <span className="bg-white px-3 text-gray-400 font-medium">or sign up with email</span>
+              <span className="bg-white px-3 text-gray-400 font-medium">
+                or sign up with email
+              </span>
             </div>
           </div>
 
           {/* Full Name Input */}
           <div className="mb-5">
-            <label className="block text-sm font-semibold text-gray-800 mb-2">Full Name</label>
+            <label className="block text-sm font-semibold text-gray-800 mb-2">
+              Full Name
+            </label>
             <div className="relative">
               <User className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
               <Input
@@ -191,7 +197,7 @@ const handleGoogleSignup = async () => {
                 type="text"
                 placeholder="Enter your full name"
                 value={name}
-                onChange={e => {
+                onChange={(e) => {
                   setName(e.target.value);
                   setError("");
                 }}
@@ -204,7 +210,9 @@ const handleGoogleSignup = async () => {
 
           {/* Email Input */}
           <div className="mb-5">
-            <label className="block text-sm font-semibold text-gray-800 mb-2">Email Address</label>
+            <label className="block text-sm font-semibold text-gray-800 mb-2">
+              Email Address
+            </label>
             <div className="relative">
               <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
               <Input
@@ -213,7 +221,7 @@ const handleGoogleSignup = async () => {
                 type="email"
                 placeholder="Enter your email address"
                 value={email}
-                onChange={e => {
+                onChange={(e) => {
                   setEmail(e.target.value);
                   setError("");
                 }}
@@ -226,25 +234,42 @@ const handleGoogleSignup = async () => {
 
           {/* Password Input */}
           <div className="mb-4">
-            <label className="block text-sm font-semibold text-gray-800 mb-2">Password</label>
+            <label className="block text-sm font-semibold text-gray-800 mb-2">
+              Password
+            </label>
             <div className="relative">
               <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
               <Input
                 ref={passwordRef}
                 name="password"
-                type="password"
+                type={showPassword ? "text" : "password"}
                 placeholder="Enter your password"
                 value={password}
-                onChange={e => {
+                onChange={(e) => {
                   setPassword(e.target.value);
                   setError("");
                 }}
                 onKeyPress={handleKeyPress}
-                className="pl-12 h-12 rounded-xl border-gray-200 focus-visible:ring-2 focus-visible:ring-yellow-400 focus-visible:border-transparent text-base"
+                className="pl-12 pr-12 h-12 rounded-xl border-gray-200 focus-visible:ring-2 focus-visible:ring-yellow-400 focus-visible:border-transparent text-base"
                 disabled={isLoading}
               />
+              <button
+                type="button"
+                tabIndex={-1}
+                className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-700"
+                onClick={() => setShowPassword((v) => !v)}
+                aria-label={showPassword ? "Hide password" : "Show password"}
+              >
+                {showPassword ? (
+                  <EyeOff className="w-5 h-5" />
+                ) : (
+                  <Eye className="w-5 h-5" />
+                )}
+              </button>
             </div>
-            <p className="text-gray-500 text-xs mt-2 font-medium">At least 6 characters</p>
+            <p className="text-gray-500 text-xs mt-2 font-medium">
+              At least 6 characters
+            </p>
           </div>
 
           {/* Error Message */}
@@ -267,7 +292,10 @@ const handleGoogleSignup = async () => {
           <div className="text-center">
             <p className="text-gray-600 text-sm">
               Already have an account?{" "}
-              <a href="/login" className="text-yellow-600 hover:text-yellow-700 font-semibold transition-colors">
+              <a
+                href="/login"
+                className="text-yellow-600 hover:text-yellow-700 font-semibold transition-colors"
+              >
                 Sign in
               </a>
             </p>
@@ -277,7 +305,10 @@ const handleGoogleSignup = async () => {
         {/* Terms */}
         <p className="text-center text-gray-500 text-xs mt-6 px-4">
           By signing up, you agree to our{" "}
-          <a href="/privacy" className="text-yellow-600 hover:text-yellow-700 font-medium transition-colors">
+          <a
+            href="/privacy"
+            className="text-yellow-600 hover:text-yellow-700 font-medium transition-colors"
+          >
             Privacy Policy
           </a>
         </p>
