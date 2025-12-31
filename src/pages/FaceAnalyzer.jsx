@@ -136,8 +136,8 @@ export default function FaceAnalyzer() {
   const sendToBackend = async (dataUrl) => {
     // Try authenticated first, then fall back to demo
     const endpoints = [
-      { url: "https://glowvai-backend-v85o.onrender.com/api/ml/analyze-face", requiresAuth: true, name: "Authenticated" },
-      { url: "https://glowvai-backend-v85o.onrender.com/api/ml/analyze-face-demo", requiresAuth: false, name: "Demo" }
+      { url: "https://api.glowvai.in/api/ml/analyze-face", requiresAuth: true, name: "Authenticated" },
+      { url: "https://api.glowvai.in/api/ml/analyze-face-demo", requiresAuth: false, name: "Demo" }
     ];
 
     for (const endpoint of endpoints) {

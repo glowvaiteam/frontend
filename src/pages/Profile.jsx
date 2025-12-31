@@ -75,7 +75,7 @@ useEffect(() => {
   const fetchProfileData = async (uid) => {
     try {
       const token = await auth.currentUser?.getIdToken();
-      const response = await axios.get("https://glowvai-backend-v85o.onrender.com/api/user/profile", {
+      const response = await axios.get("https://api.glowvai.in/api/user/profile", {
         headers: { Authorization: `Bearer ${token}` },
       });
      setProfileData(response.data);
@@ -94,7 +94,7 @@ useEffect(() => {
     try {
       const token = await auth.currentUser?.getIdToken();
       console.log("Fetching analysis history with token:", token ? "present" : "missing");
-      const response = await axios.get("https://glowvai-backend-v85o.onrender.com/api/ml/history", {
+      const response = await axios.get("https://api.glowvai.in/api/ml/history", {
         headers: { Authorization: `Bearer ${token}` },
       });
       console.log("Analysis history response:", response.data);
@@ -153,7 +153,7 @@ useEffect(() => {
         formData.append("profile_image", imageFile);
       }
 
-      const response = await axios.post("https://glowvai-backend-v85o.onrender.com/api/user/profile", formData, {
+      const response = await axios.post("https://api.glowvai.in/api/user/profile", formData, {
         headers: {
           Authorization: `Bearer ${token}`,
           "Content-Type": "multipart/form-data",

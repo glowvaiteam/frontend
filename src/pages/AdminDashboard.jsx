@@ -25,7 +25,7 @@ ChartJS.register(
 );
 
 /* ================= BACKEND URL ================= */
-const API = "https://glowvai-backend-v85o.onrender.com/api/admin";
+const API = "https://api.glowvai.in/api/admin";
 
 
 function AdminDashboard() {

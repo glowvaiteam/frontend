@@ -44,7 +44,7 @@ if (u) {
   try {
     const token = await u.getIdToken();
     const response = await fetch(
-      "https://glowvai-backend-v85o.onrender.com/api/user/profile",
+      "https://api.glowvai.in/api/user/profile",
       {
         headers: { Authorization: `Bearer ${token}` },
       }
