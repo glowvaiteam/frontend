@@ -81,7 +81,7 @@ export function Footer() {
     <img
       src={WWILogo}
       alt="WWI Logo"
-      className="h-12 md:h-23 w-auto object-contain"
+      className="h-16 md:h-26 w-auto object-contain"
       style={{ marginRight: "0px", marginTop: "2px" }}
       draggable={false}
     />
