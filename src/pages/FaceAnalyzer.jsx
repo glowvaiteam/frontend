@@ -3,6 +3,9 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { auth } from "../firebase";
 import { onAuthStateChanged } from "firebase/auth";
 import { Camera, Upload, Scan, Sparkles, AlertCircle, CheckCircle2, ShoppingBag } from "lucide-react";
+import FeedbackPopup from "@/components/FeedbackPopup";
+  // Feedback popup state
+  const [showFeedbackPopup, setShowFeedbackPopup] = useState(false);
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
@@ -197,6 +200,19 @@ export default function FaceAnalyzer() {
   };
 
   const analyzeImage = async (img) => {
+    // Track analysis count in localStorage
+    let count = parseInt(localStorage.getItem("glowvai_analysis_count") || "0", 10) + 1;
+    localStorage.setItem("glowvai_analysis_count", count.toString());
+    if (count === 3) {
+      setTimeout(() => setShowFeedbackPopup(true), 1200); // show after result
+    }
+      // Reset feedback count after feedback submitted
+      const handleFeedbackPopupChange = (open) => {
+        setShowFeedbackPopup(open);
+        if (!open) {
+          localStorage.setItem("glowvai_analysis_count", "0");
+        }
+      };
     // If called with an image string (programmatic), skip the one-time tip
     const isProgrammatic = typeof img === "string";
     const target = isProgrammatic ? img : image;
@@ -307,6 +323,7 @@ export default function FaceAnalyzer() {
 
   return (
     <main className="min-h-screen bg-background py-6 md:py-10">
+      <FeedbackPopup open={showFeedbackPopup} onOpenChange={handleFeedbackPopupChange} />
       <div className="container max-w-4xl mx-auto px-4 md:px-6 space-y-6 md:space-y-8">
         {/* Intro Card */}
         <Card className="border-0 shadow-xl gradient-primary text-primary-foreground">

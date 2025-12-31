@@ -73,16 +73,31 @@ const handleGoogleLogin = async () => {
   }
 };
 
-
-
-
-
-
-
 const handleLogin = async () => {
   setError("");
   setIsLoading(true);
 
+  /* ============================
+     ADMIN LOGIN (STATIC CHECK)
+  ============================ */
+  if (
+    email === "admin@glowvai.in" &&
+    password === "Glowvai@sardhar12"
+  ) {
+    localStorage.setItem("admin", "true");
+
+    toast({
+      description: "Admin login successful!",
+    });
+
+    navigate("/admin"); // ✅ ADMIN DASHBOARD
+    setIsLoading(false);
+    return;
+  }
+
+  /* ============================
+     NORMAL USER LOGIN (Firebase)
+  ============================ */
   try {
     const res = await signInWithEmailAndPassword(auth, email, password);
     const token = await res.user.getIdToken();
@@ -93,12 +108,9 @@ const handleLogin = async () => {
       description: "Login successful!",
     });
 
-    // ✅ Redirect to HOME
-    navigate("/");
+    navigate("/"); // normal user home
 
   } catch (err) {
-    setIsLoading(false);
-
     if (err.code === "auth/wrong-password") {
       setError("Incorrect password. Please try again.");
       toast({ description: "Incorrect password", variant: "destructive" });
@@ -111,8 +123,16 @@ const handleLogin = async () => {
     }
 
     setPassword("");
+  } finally {
+    setIsLoading(false);
   }
 };
+
+
+
+
+
+
 
 
   
@@ -253,5 +273,5 @@ const handleLogin = async () => {
       </div>
     </div>
   );
-  
+
 }

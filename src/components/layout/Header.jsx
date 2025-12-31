@@ -212,6 +212,14 @@ if (u) {
                   <Shield className="h-5 w-5 text-muted-foreground" />
                   <span>Privacy Policy</span>
                 </Link>
+                <Link
+                  to="/feedback"
+                  onClick={() => setIsOpen(false)}
+                  className="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-secondary transition-all"
+                >
+                  <svg className="h-5 w-5 text-muted-foreground" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" d="M8 10h.01M12 10h.01M16 10h.01M21 12c0 4.418-4.03 8-9 8a9.77 9.77 0 01-4-.8L3 21l1.09-3.27C3.4 16.13 3 14.74 3 13.25c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path></svg>
+                  <span>Feedback</span>
+                </Link>
               </div>
             </div>
           </SheetContent>
