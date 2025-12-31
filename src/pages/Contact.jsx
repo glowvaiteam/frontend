@@ -101,14 +101,14 @@ export default function Contact() {
                 title="Email"
                 subtitle={
                   <>
-                    glowvai.team@gmail.com
+                    contact@glowvai.in
                     <br />
                     +91 8977855998
                     <br />
                     Vijayawada
                   </>
                 }
-                href="mailto:glowvai.team@gmail.com"
+                href="mailto:contact@glowvai.in"
               />
 
             </div>

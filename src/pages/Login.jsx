@@ -171,7 +171,7 @@ const handleLogin = async () => {
           <Button
             onClick={handleGoogleLogin}
             disabled={isLoading}
-            className="w-full mb-6 rounded-full bg-white/20 text-gray-900 border border-white/40 hover:bg-yellow-50 hover:border-yellow-200 h-12 text-base font-medium transition-all duration-200"
+            className="w-full mb-6 rounded-full bg-white/20 text-gray-900 border border-yellow-400 outline outline-1 outline-yellow-400 hover:bg-yellow-50 hover:border-yellow-200 h-12 text-base font-medium transition-all duration-200"
           >
             <img src={GoogleSVG} alt="Google" className="w-5 h-5 mr-2" />
             Continue with Google
