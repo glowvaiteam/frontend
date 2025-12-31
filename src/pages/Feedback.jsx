@@ -83,7 +83,8 @@ export default function Feedback() {
           </CardHeader>
           <CardContent>
             <div className="flex flex-col items-center gap-4">
-              <div className="flex items-center gap-3 w-full">
+              {/* Hide on mobile, show on md+ */}
+              <div className="hidden md:flex items-center gap-3 w-full">
                 <Avatar>
                   <AvatarImage src={auth.currentUser?.photoURL || undefined} alt={name || "User"} />
                   <AvatarFallback>{name ? name[0] : "U"}</AvatarFallback>
