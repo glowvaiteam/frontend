@@ -22,10 +22,9 @@ import PrivacyPolicy from "./pages/PrivacyPolicy";
 import Contact from "./pages/Contact";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
-import AdminDashboard from "./pages/AdminDashboard";
 import NotFound from "./pages/NotFound";
 import Feedback from "./pages/Feedback";
-import AdminFeedbacks from "./pages/AdminFeedbacks";
+
 
 /* ================= FIREBASE ================= */
 import { getAuth } from "firebase/auth";
@@ -88,10 +87,10 @@ const AppContent = ({ isDark, toggleDark }) => {
           <Route path="/about" element={<About />} />
           <Route path="/privacy" element={<PrivacyPolicy />} />
           <Route path="/contact" element={<Contact />} />
-          <Route path="/admin" element={<AdminDashboard />} />
+          
           <Route path="*" element={<NotFound />} />
           <Route path="/feedback" element={<Feedback />} />
-          <Route path="/admin/feedbacks" element={<AdminFeedbacks />} />
+          
         </Routes>
       </main>
 

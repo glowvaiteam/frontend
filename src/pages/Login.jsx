@@ -22,122 +22,94 @@ export default function Login() {
   const navigate = useNavigate();
   const passwordRef = useRef(null);
 
+  const handleGoogleLogin = async () => {
+    setError("");
+    setIsLoading(true);
 
-const handleGoogleLogin = async () => {
-  setError("");
-  setIsLoading(true);
+    try {
+      // 1️⃣ Google authentication
+      const res = await signInWithPopup(auth, googleProvider);
+      const user = res.user;
 
-  try {
-    // 1️⃣ Google authentication
-    const res = await signInWithPopup(auth, googleProvider);
-    const user = res.user;
+      // 2️⃣ Get Firebase token
+      const token = await user.getIdToken();
+      localStorage.setItem("token", token);
 
-    // 2️⃣ Get Firebase token
-    const token = await user.getIdToken();
-    localStorage.setItem("token", token);
+      // 3️⃣ Firestore reference
+      const userRef = doc(db, "users", user.uid);
+      const userSnap = await getDoc(userRef);
 
-    // 3️⃣ Firestore reference
-    const userRef = doc(db, "users", user.uid);
-    const userSnap = await getDoc(userRef);
+      // 4️⃣ Create user in Firestore if not exists
+      if (!userSnap.exists()) {
+        await setDoc(userRef, {
+          uid: user.uid,
+          email: user.email,
+          full_name: user.displayName || "User",
+          age: "",
+          gender: "",
+          height: "",
+          weight: "",
+          profile_completed: false,
+          created_at: new Date(),
+          updated_at: new Date(),
+        });
+      }
 
-    // 4️⃣ Create user in Firestore if not exists
-    if (!userSnap.exists()) {
-      await setDoc(userRef, {
-        uid: user.uid,
-        email: user.email,
-        full_name: user.displayName || "User",
-        age: "",
-        gender: "",
-        height: "",
-        weight: "",
-        profile_completed: false,
-        created_at: new Date(),
-        updated_at: new Date(),
+      toast({
+        description: "Google login successful!",
       });
+
+      // ✅ ALWAYS redirect to HOME
+      navigate("/");
+
+    } catch (error) {
+      console.error(error);
+      toast({
+        description: "Google login failed",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
     }
+  };
 
-    toast({
-      description: "Google login successful!",
-    });
+  const handleLogin = async () => {
+    setError("");
+    setIsLoading(true);
 
-    // ✅ ALWAYS redirect to HOME
-    navigate("/");
+    /* ============================
+       NORMAL USER LOGIN (Firebase)
+    ============================ */
+    try {
+      const res = await signInWithEmailAndPassword(auth, email, password);
+      const token = await res.user.getIdToken();
 
-  } catch (error) {
-    console.error(error);
-    toast({
-      description: "Google login failed",
-      variant: "destructive",
-    });
-  } finally {
-    setIsLoading(false);
-  }
-};
+      localStorage.setItem("token", token);
 
-const handleLogin = async () => {
-  setError("");
-  setIsLoading(true);
+      toast({
+        description: "Login successful!",
+      });
 
-  /* ============================
-     ADMIN LOGIN (STATIC CHECK)
-  ============================ */
-  if (
-    email === "admin@glowvai.in" &&
-    password === "Glowvai@sardhar12"
-  ) {
-    localStorage.setItem("admin", "true");
+      navigate("/"); // normal user home
 
-    toast({
-      description: "Admin login successful!",
-    });
+    } catch (err) {
+      if (err.code === "auth/wrong-password") {
+        setError("Incorrect password. Please try again.");
+        toast({ description: "Incorrect password", variant: "destructive" });
+      } else if (err.code === "auth/user-not-found") {
+        setError("Email not registered. Please sign up first.");
+        toast({ description: "Email not registered", variant: "destructive" });
+      } else {
+        setError("Login failed. Please try again.");
+        toast({ description: "Login failed", variant: "destructive" });
+      }
 
-    navigate("/admin"); // ✅ ADMIN DASHBOARD
-    setIsLoading(false);
-    return;
-  }
-
-  /* ============================
-     NORMAL USER LOGIN (Firebase)
-  ============================ */
-  try {
-    const res = await signInWithEmailAndPassword(auth, email, password);
-    const token = await res.user.getIdToken();
-
-    localStorage.setItem("token", token);
-
-    toast({
-      description: "Login successful!",
-    });
-
-    navigate("/"); // normal user home
-
-  } catch (err) {
-    if (err.code === "auth/wrong-password") {
-      setError("Incorrect password. Please try again.");
-      toast({ description: "Incorrect password", variant: "destructive" });
-    } else if (err.code === "auth/user-not-found") {
-      setError("Email not registered. Please sign up first.");
-      toast({ description: "Email not registered", variant: "destructive" });
-    } else {
-      setError("Login failed. Please try again.");
-      toast({ description: "Login failed", variant: "destructive" });
+      setPassword("");
+    } finally {
+      setIsLoading(false);
     }
-
-    setPassword("");
-  } finally {
-    setIsLoading(false);
-  }
-};
-
-
-
-
-
-
-
-
+  };
   
-
   const handleKeyPress = (e) => {
     if (e.key === "Enter") {
       if (e.target.name === "email" && passwordRef.current) {
