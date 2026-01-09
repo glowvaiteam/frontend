@@ -24,7 +24,7 @@ import Login from "./pages/Login";
 import Signup from "./pages/Signup";
 import NotFound from "./pages/NotFound";
 import Feedback from "./pages/Feedback";
-
+import ForgotPassword from "./pages/ForgotPassword";
 
 /* ================= FIREBASE ================= */
 import { getAuth } from "firebase/auth";
@@ -76,6 +76,7 @@ const AppContent = ({ isDark, toggleDark }) => {
           <Route path="/" element={<Index />} />
           <Route path="/login" element={<Login />} />
           <Route path="/signup" element={<Signup />} />
+          <Route path="/forgot-password" element={<ForgotPassword />} />
           <Route path="/analyzer" element={<FaceAnalyzer />} />
           <Route path="/store" element={<Store />} />
           <Route path="/profile" element={<Profile />} />
